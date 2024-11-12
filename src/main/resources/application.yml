@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: demo # 应用名称
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/software?serverTimezone=UTC
+    username: root
+    password: 165831
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+server:
+  servlet:
+    context-path: /demo # 应用上下文路径(请不要随便改，要改前端接口得全部重写)
+  port: 8080 # 监听端口
+  address: 0.0.0.0 # 监听所有网卡
+  tomcat:
+    accept-count: 100 # Tomcat最大连接数
+    connection-timeout: 30000 # Tomcat连接超时时间
+    threads:
+      max: 200 # Tomcat最大线程数
+
+# springdoc-openapi 配置
+springdoc:
+  swagger-ui:
+    path: /swagger
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+
+  group-configs: #????,???????
+    - group: 'controller'
+      paths-to-match: '/**'
+      packages-to-scan: com.example.demo.controller
+
+
+# knife4j 配置 
+knife4j:
+  enable: true    # 开启
+  setting:
+    language: zh_cn   # 语言
+    swagger-model-name: Entity  # 自己定义的实体类名称
+  basic:
+    enable: true
+    # swagger用户名
+    username: user
+    # swagger密码
+    password: 123456
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true # ***驼峰命名规则转换***很重要，没有的话entity的属性名与数据库字段名不一样就识别不了（必须完全一致）
+  type-aliases-package: com.example.demo.entity
+  mapper-locations: classpath:mapper/*.xml
+
+logging:
+  level:
+    com.example.demo.mapper: debug

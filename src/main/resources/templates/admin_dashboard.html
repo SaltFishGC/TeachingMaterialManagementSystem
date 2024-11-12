@@ -1,0 +1,4382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员页面 - 南京信息工程大学教材管理系统</title>
+    <style>
+        /*----------------------------------------------------------------------------------------------*/
+        /* 基础样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        body {
+            font-family: 'Arial', sans-serif; /* 设置字体为 Arial 或无衬线字体 */
+            margin: 0; /* 移除body的外边距 */
+            padding: 0; /* 移除body的内边距 */
+            background: url('/demo/pic/background.jpg') no-repeat center center fixed; /* 设置背景图片(文件在resources的pic中) */
+            background-size: cover; /* 背景图片覆盖整个页面 */
+            color: #333; /* 设置文字颜色为深灰色 */
+            min-height: 100vh; /* 设置最小高度为视口高度 */
+            position: relative; /* 设置相对定位 */
+        }
+
+        /* 添加一个覆盖层来确保内容可读性 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(230, 247, 255, 0.8) 0%, rgba(179, 224, 255, 0.8) 100%);
+            z-index: -1;
+        }
+
+        .container {
+            display: flex; /* 使用弹性布局 */
+            min-height: 100vh; /* 设置最小高度为视口高度 */
+            position: relative; /* 设置相对定位 */
+            z-index: 1; /* 设置层级 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 侧边栏样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .sidebar {
+            position: relative; /* 设置相对定位 */
+            width: 250px; /* 设置宽度为250像素 */
+            background: rgba(255, 255, 255, 0.3); /* 设置半透明白色背景 */
+            -webkit-backdrop-filter: blur(10px); /* 为 Webkit 浏览器设置背景模糊效果 */
+            backdrop-filter: blur(10px); /* 设置背景模糊效果 */
+            padding: 2rem; /* 设置内边距为2rem */
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); /* 添加阴影效果 */
+            transition: width 0.3s ease, background 0.3s ease; /* 设置宽度和背景的过渡效果 */
+        }
+        .sidebar.collapsed {
+            width: 60px; /* 当侧边栏折叠时，设置宽度为60像素 */
+        }
+        .sidebar.collapsed h1, .sidebar.collapsed nav {
+            display: none; /* 当侧边栏折叠时，隐藏标题和导航 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 侧边栏切换按钮样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .toggle-sidebar {
+            position: absolute; /* 设置绝对定位 */
+            top: 10px; /* 距顶部10像素 */
+            right: 0px; /* 距右侧0像素 */
+            background: rgba(255, 255, 255, 0.5); /* 设置半透明白色背景 */
+            border: none; /* 移除边框 */
+            border-radius: 0 5px 5px 0; /* 设置右侧圆角 */
+            padding: 5px 10px; /* 设置内边距 */
+            font-size: 16px; /* 设置字体大小 */
+            cursor: pointer; /* 设置鼠标悬停时的光标样式为手型 */
+            z-index: 10; /* 设置层级 */
+            transition: right 0.3s ease; /* 设置right属性的过渡效果 */
+        }
+        .sidebar.collapsed .toggle-sidebar {
+            right: 0px; /* 侧边栏折叠时，保持按钮在右侧 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 主内容区域样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .main-content {
+            flex-grow: 1; /* 允许主内容区域增长以填充剩余空间 */
+            padding: 2rem; /* 设置内边距为2rem */
+            overflow-y: auto; /* 允许垂直滚动 */
+            transition: margin-left 0.3s ease; /* 设置左边距的过渡效果 */
+            margin-left: 30px; /* 设置左边距为30像素 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 标题样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        h1, h2 {
+            margin-bottom: 1rem; /* 设置下边距为1rem */
+            background: linear-gradient(45deg, #0072ff, #00c6ff); /* 设置渐变背景 */
+            -webkit-background-clip: text; /* 为 Webkit 浏览器设置背景裁剪为文字 */
+            background-clip: text; /* 设置背景裁剪为文字 */
+            color: transparent; /* 设置文字颜色为透明 */
+            animation: gradient 5s ease infinite; /* 应用渐变动画 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 菜单项样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .menu-item {
+            display: block; /* 设置为块级元素 */
+            padding: 0.5rem 1rem; /* 设置内边距 */
+            margin-bottom: 0.5rem; /* 设置下边距 */
+            background: rgba(255, 255, 255, 0.3); /* 设置半透明白色背景 */
+            border-radius: 5px; /* 设置圆角 */
+            text-decoration: none; /* 移除文本装饰 */
+            color: #333; /* 设置文字颜色 */
+            transition: all 0.3s ease; /* 设置所有属性的过渡效果 */
+        }
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255, 255, 255, 0.5); /* 悬停或激活时改变背景色 */
+            transform: translateX(5px); /* 悬停或激活时向右移动5像素 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 内容区域样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .content-section {
+            background: rgba(255, 255, 255, 0.3); /* 设置半透明白色背景 */
+            -webkit-backdrop-filter: blur(10px); /* 为 Webkit 浏览器设置背景模糊效果 */
+            backdrop-filter: blur(10px); /* 设置背景模糊效果 */
+            border-radius: 10px; /* 设置圆角 */
+            padding: 1rem; /* 设置内边距 */
+            margin-bottom: 1rem; /* 设置下边距 */
+            display: none; /* 默认隐藏 */
+        }
+        .content-section.active {
+            display: block; /* 激活时显示 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 表格样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        table {
+            width: 100%; /* 设置宽度为100% */
+            border-collapse: collapse; /* 合并边框 */
+        }
+        th, td {
+            padding: 0.5rem; /* 设置内边距 */
+            text-align: left; /* 文字左对齐 */
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* 设置下边框 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 按钮样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .button, .submit-order {
+            background: linear-gradient(45deg, #0072ff, #00c6ff); /* 设置渐变背景 */
+            color: white; /* 设置文字颜色为白色 */
+            padding: 10px 15px; /* 设置内边距 */
+            border: none; /* 移除边框 */
+            border-radius: 5px; /* 设置圆角 */
+            cursor: pointer; /* 设置鼠标悬停时的光标样式为手型 */
+            transition: all 0.3s ease; /* 设置所有属性的过渡效果 */
+            font-size: 0.9em; /* 设置字体大小 */
+            text-align: center; /* 文字居中 */
+            text-decoration: none; /* 移除文本装饰 */
+            display: inline-block; /* 设置为内联块级元素 */
+        }
+        .button:hover, .submit-order:hover {
+            background: linear-gradient(45deg, #005ae6, #00b3ff); /* 悬停时改变背景色 */
+            transform: translateY(-2px); /* 悬停时向上移动2像素 */
+            box-shadow: 0 4px 8px rgba(0, 114, 255, 0.3); /* 添加阴影效果 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 通知样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .notification {
+            background: rgba(255, 255, 255, 0.3); /* 设置半透明白色背景 */
+            padding: 1rem; /* 设置内边距 */
+            border-radius: 5px; /* 设置圆角 */
+            margin-bottom: 0.5rem; /* 设置下边距 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 侧边栏动画 */
+        /*----------------------------------------------------------------------------------------------*/
+        .sidebar h1, .sidebar nav {
+            opacity: 1; /* 设置不透明度为1 */
+            transition: opacity 0.3s ease; /* 设置不透明度的过渡效果 */
+        }
+        
+        .sidebar:not(.collapsed) h1, .sidebar:not(.collapsed) nav {
+            opacity: 0; /* 设置不透明度为0 */
+            transition-delay: 0.05s; /* 设置过渡延迟 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 消息按钮样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .message-button {
+            position: absolute; /* 设置绝对定位 */
+            bottom: 20px; /* 距底部20像素 */
+            left: 20px; /* 距左侧20像素 */
+            background: linear-gradient(45deg, #0072ff, #00c6ff); /* 设置渐变背景 */
+            color: white; /* 设置文字颜色为白色 */
+            border: none; /* 移除边框 */
+            border-radius: 50%; /* 设置为圆形 */
+            width: 50px; /* 设置宽度为50像素 */
+            height: 50px; /* 设置高度为50像素 */
+            font-size: 24px; /* 设置字体大小 */
+            cursor: pointer; /* 设置鼠标悬停时的光标样式为手型 */
+            transition: all 0.3s ease; /* 设置所有属性的过渡效果 */
+        }
+
+        .message-button:hover {
+            transform: scale(1.1); /* 悬停时放大1.1倍 */
+            box-shadow: 0 0 15px rgba(0, 114, 255, 0.5); /* 添加阴影效果 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 用户信息样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .user-info {
+            display: flex; /* 使用弹性布局 */
+            align-items: center; /* 垂直居中 */
+            justify-content: space-between; /* 水平布 */
+            padding: 10px 20px; /* 设置内边距 */
+            background: rgba(255, 255, 255, 0.3); /* 设置半透明白背 */
+            border-radius: 10px; /* 设置圆角 */
+            margin-bottom: 20px; /* 设置下边距 */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 添加阴影效果 */
+            transition: opacity 0.3s ease; /* 设置不透明度的过渡效果 */
+        }
+        #admName {
+            font-weight: bold; /* 设置字体加粗 */
+            color: #333; /* 设置文字颜色为深灰色 */
+            font-size: 1.2rem; /* 设置字体大小 */
+            background: linear-gradient(45deg, #0072ff, #00c6ff); /* 设置渐变背景 */
+            -webkit-background-clip: text; /* 为 Webkit 浏览器设置背景裁剪为文字 */
+            background-clip: text; /* 设置背景裁剪为文字 */
+            -webkit-text-fill-color: transparent; /* 设置文字填充颜色为透明 */
+        }
+        #logoutBtn {
+            background: linear-gradient(45deg, #0072ff, #00c6ff); /* 设置渐变背景 */
+            border: none; /* 移除边框 */
+            color: white; /* 设置文字颜色为白色 */
+            padding: 5px 10px; /* 设置内边距 */
+            border-radius: 5px; /* 设置圆角 */
+            cursor: pointer; /* 设置鼠标悬停时的光标样式为手型 */
+            font-size: 0.9rem; /* 设置字体大小 */
+            transition: all 0.3s ease; /* 设置所有属性的过渡效果 */
+        }
+        #logoutBtn:hover {
+            background: linear-gradient(45deg, #005ae6, #00b3ff); /* 悬停时改变背景色 */
+            transform: translateY(-2px); /* 悬停时向上移动2像素 */
+            box-shadow: 0 4px 8px rgba(0, 114, 255, 0.3); /* 添加阴影效果 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 订单状态样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .status-0 { color: #ff9800; } /* 未接收 */
+        .status-1 { color: #2196f3; } /* 正在处理 */
+        .status-2 { color: #4caf50; } /* 待取 */
+        .status-3 { color: #9e9e9e; } /* 已完成 */
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 排序图标样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .sort-icon {
+            cursor: pointer; /* 设置鼠标悬停时的标样式为手型 */
+            -webkit-user-select: none; /* 禁止 Webkit 浏览器选中文字 */
+            user-select: none; /* 禁止选中文字 */
+            margin-left: 5px; /* 设置左边距 */
+        }
+        .sort-icon:hover {
+            color: #0072ff; /* 悬停时改变颜色 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 子菜单样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .submenu {
+            display: none; /* 默认隐藏 */
+            padding-left: 20px; /* 设置左边距 */
+            overflow: hidden; /* 隐藏溢出内容 */
+            transition: max-height 0.3s ease-out; /* 设置最大高度的过渡效果 */
+            max-height: 0; /* 设置最大高度为0 */
+        }
+
+        .submenu.active {
+            display: block; /* 激活时显示 */
+            max-height: 1000px; /* 设置最大高度为1000像素 */
+        }
+
+        .submenu .menu-item {
+            padding: 0.3rem 0.5rem; /* 设置内边距 */
+            font-size: 0.9em; /* 设置字体大小 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 搜索栏样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .search-bar {
+            display: flex; /* 用弹布局 */
+            align-items: center; /* 垂直居中 */
+            margin-bottom: 1rem; /* 设置下边距 */
+            background: rgba(255, 255, 255, 0.2); /* 设置半透明白色背景 */
+            border-radius: 5px; /* 设置圆角 */
+            padding: 0.5rem; /* 设置内边距 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 添加阴影效果 */
+        }
+
+        .search-bar input {
+            flex: 1; /* 占据剩余空间 */
+            border: none; /* 移除边框 */
+            background: transparent; /* 设置背景为透明 */
+            padding: 0.5rem; /* 设置内边距 */
+            font-size: 1rem; /* 设置字体大小 */
+            color: #333; /* 设置文字颜色为深灰色 */
+        }
+
+        .search-bar input::placeholder {
+            color: #666; /* 设置占位文字颜色 */
+        }
+
+        .search-bar button {
+            background: linear-gradient(45deg, #0072ff, #00c6ff); /* 设置渐变背景 */
+            border: none; /* 移除边框 */
+            color: white; /* 设置文字颜色为白色 */
+            padding: 10px 15px; /* 设置内边距 */
+            border-radius: 0 5px 5px 0; /* 设置右侧圆角 */
+            cursor: pointer; /* 设置鼠标悬停时的光标样式为手型 */
+            transition: all 0.3s ease; /* 设置所有属性的过渡效果 */
+        }
+
+        .search-bar button:hover {
+            background: linear-gradient(45deg, #005ae6, #00b3ff); /* 悬停时改变背景色 */
+            transform: translateY(-2px); /* 悬停时向上移动2像素 */
+            box-shadow: 0 4px 8px rgba(0, 114, 255, 0.3); /* 添加阴影效果 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 分页样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .pagination {
+            display: flex; /* 使用弹性布局 */
+            justify-content: center; /* 水平居中 */
+            align-items: center; /* 垂直居中 */
+            margin-top: 1rem; /* 设置上边距 */
+            background: rgba(255, 255, 255, 0.2); /* 设置半透明白色背景 */
+            border-radius: 5px; /* 设置圆角 */
+            padding: 0.5rem; /* 设置内边距 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 添加阴影效果 */
+        }
+
+        .pagination button,
+        .pagination select {
+            background: linear-gradient(45deg, #0072ff, #00c6ff); /* 设置渐变背景 */
+            border: none; /* 移除边框 */
+            color: white; /* 设置文字颜色为白色 */
+            padding: 8px 12px; /* 设置内边距 */
+            margin: 0 5px; /* 设置外边距 */
+            border-radius: 5px; /* 设圆角 */
+            cursor: pointer; /* 设置鼠标悬停时的光标样式为手型 */
+            transition: all 0.3s ease; /* 设置所有属性的过渡效果 */
+        }
+
+        .pagination button:hover:not(:disabled),
+        .pagination select:hover {
+            background: linear-gradient(45deg, #005ae6, #00b3ff); /* 悬停时改变背景色 */
+            transform: translateY(-2px); /* 悬停时向上移动2像素 */
+            box-shadow: 0 4px 8px rgba(0, 114, 255, 0.3); /* 添加阴影效果 */
+        }
+
+        .pagination button:disabled {
+            background: #ccc; /* 设置禁用按钮的背景色 */
+            cursor: not-allowed; /* 设置鼠标悬停时的光标样式为禁止 */
+        }
+
+        .pagination select {
+            appearance: none; /* 移除默认样式 */
+            -webkit-appearance: none; /* 移除 Webkit 浏览器的默认样式 */
+            padding-right: 2rem; /* 设置右边距 */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); /* 设置下拉箭头图标 */
+            background-repeat: no-repeat; /* 不重复背景图片 */
+            background-position: calc(100% - 0.5rem) center; /* 设置背景图片位置 */
+            color: black; /* 设置文字颜色为黑色 */
+        }
+
+        .pagination select option {
+            background-color: white; /* 设置选项背景色为白色 */
+            color: black; /* 设置文字颜色为黑色 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 模态框样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .modal {
+            display: none; /* 默认隐藏 */
+            position: fixed; /* 固定定位 */
+            z-index: 1000; /* 设置层级 */
+            left: 0; /* 距左侧0像素 */
+            top: 0; /* 距顶部0像素 */
+            width: 100%; /* 设置宽度为100% */
+            height: 100%; /* 设置高度为100% */
+            overflow: auto; /* 允许滚动 */
+            background-color: rgba(0,0,0,0.4); /* 设置半透明黑色背景 */
+            animation: fadeIn 0.3s; /* 应用淡入动画 */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; } /* 从不透明度0开始 */
+            to { opacity: 1; } /* 到不透明度1结束 */
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95); /* 设置背景色 */
+            margin: 10% auto; /* 上下边距为10%，水平居中 */
+            padding: 30px; /* 设置内边距 */
+            border: none; /* 移除边框 */
+            border-radius: 10px; /* 设置圆角 */
+            width: 90%; /* 设置宽度为90% */
+            max-width: 400px; /* 最大宽度为400像素 */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* 添加阴影效果 */
+            animation: slideIn 0.3s; /* 应用滑入动画 */
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; } /* 从向上移动50像素且不透明度0开始 */
+            to { transform: translateY(0); opacity: 1; } /* 到原位且不透明度1结束 */
+        }
+
+        .modal-content h2 {
+            margin-top: 0; /* 移除上边距 */
+            color: #333; /* 设置文字颜色为深灰色 */
+            font-size: 24px; /* 设置字体大小 */
+            text-align: center; /* 文字居中 */
+        }
+
+        .modal-form {
+            display: flex; /* 使用弹性布局 */
+            flex-direction: column; /* 垂直排列 */
+        }
+
+        .modal-form input {
+            margin-bottom: 15px; /* 设置下边距 */
+            padding: 10px; /* 设置内边距 */
+            border: 1px solid #ddd; /* 设置边框 */
+            border-radius: 5px; /* 设置圆角 */
+            font-size: 16px; /* 设置字体大小 */
+        }
+
+        .modal-form button {
+            background: linear-gradient(45deg, #0072ff, #00c6ff); /* 设置渐变背景 */
+            color: white; /* 设置文字颜色为白色 */
+            border: none; /* 移除边框 */
+            padding: 12px; /* 设置内边距 */
+            border-radius: 5px; /* 设置圆角 */
+            font-size: 16px; /* 设置字体大小 */
+            cursor: pointer; /* 设置鼠标悬停时的光标样式为手型 */
+            transition: all 0.3s ease; /* 设置所有属性的过渡效果 */
+        }
+
+        .modal-form button:hover {
+            background: linear-gradient(45deg, #005ae6, #00b3ff); /* 悬停时改变背景色 */
+            transform: translateY(-2px); /* 悬停时向上移动2像素 */
+            box-shadow: 0 4px 8px rgba(0, 114, 255, 0.3); /* 添加阴影效果 */
+        }
+
+        .close {
+            color: #aaa; /* 设置文字颜色 */
+            float: right; /* 右浮动 */
+            font-size: 28px; /* 设置字体大小 */
+            font-weight: bold; /* 设置字体加粗 */
+            cursor: pointer; /* 设置鼠标悬停时的光标样式为手型 */
+            transition: 0.3s; /* 设置过渡效果 */
+        }
+
+        .close:hover {
+            color: #333; /* 悬停时改变颜色 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 订单网格样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        .order-grid {
+            display: grid; /* 使用网格布局 */
+            grid-template-columns: 1fr 1fr; /* 两列，每列宽度相等 */
+            gap: 20px; /* 设置间距 */
+        }
+
+        .book-details {
+            background-color: #fff; /* 设置背景色 */
+            padding: 20px; /* 设置内边距 */
+            border-radius: 5px; /* 设置圆角 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 添加阴影效果 */
+        }
+
+        .book-details p {
+            margin: 10px 0; /* 设置上下边距 */
+            color: #555; /* 设置文字颜色 */
+        }
+
+        .book-details strong {
+            color: #333; /* 设置文字颜色 */
+        }
+
+        .order-form {
+            display: flex; /* 使用弹性布局 */
+            flex-direction: column; /* 垂直排列 */
+        }
+
+        .order-form label {
+            margin-bottom: 5px; /* 设置下边距 */
+            color: #555; /* 设置文字颜色 */
+        }
+
+        .order-form input {
+            padding: 10px; /* 设置内边距 */
+            margin-bottom: 15px; /* 设置下边距 */
+            border: 1px solid #ddd; /* 设置边框 */
+            border-radius: 4px; /* 设置圆角 */
+        }
+
+        .total-price {
+            font-size: 1.2em; /* 设置字体大小 */
+            font-weight: bold; /* 设置字体加粗 */
+            color: #333; /* 设置文字颜色 */
+            margin: 15px 0; /* 设置上下边距 */
+        }
+
+        .submit-order {
+            width: 100%; /* 设置宽度为100% */
+            padding: 12px; /* 设置内边距 */
+            font-size: 1em; /* 设置字体大小 */
+            margin-top: 15px; /* 设置上边距 */
+        }
+
+        .modal-content {
+            text-align: center; /* 文字居中 */
+        }
+
+        .modal-body {
+            margin-top: 20px; /* 设置上边距 */
+        }
+
+        .button-group {
+            margin-top: 20px; /* 设置上边距 */
+        }
+
+        .button-group .button {
+            margin: 0 10px; /* 设置左右边距 */
+        }
+
+        .button:disabled {
+            background: linear-gradient(45deg, #ccc, #ddd); /* 设置禁用按钮的背景色 */
+            cursor: not-allowed; /* 设置鼠标悬停时的光标样式为禁止 */
+        }
+
+        .button:disabled:hover {
+            transform: none; /* 移除悬停时的变换效果 */
+            box-shadow: none; /* 移除阴影效果 */
+        }
+
+        .refresh-button {
+            background: linear-gradient(45deg, #0072ff, #00c6ff); /* 设置渐变背景 */
+            border: none; /* 移除边框 */
+            color: white; /* 设置文字颜色为白色 */
+            padding: 5px 10px; /* 设置内边距 */
+            border-radius: 5px; /* 设置圆角 */
+            cursor: pointer; /* 设置鼠标悬停时的光标样式为手型 */
+            font-size: 0.9rem; /* 设置字体大小 */
+            transition: all 0.3s ease; /* 设置所有属性的过渡效果 */
+            margin-left: 10px; /* 设置左边距 */
+        }
+        .refresh-button:hover {
+            background: linear-gradient(45deg, #005ae6, #00b3ff); /* 悬停时改变背景色 */
+            transform: translateY(-2px); /* 悬停时向上移动2像素 */
+            box-shadow: 0 4px 8px rgba(0, 114, 255, 0.3); /* 添加阴影效果 */
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 消息部分样式 */
+        /*----------------------------------------------------------------------------------------------*/
+        #messages {
+            background: rgba(255, 255, 255, 0.3); /* 设置半透明白色背景 */
+            -webkit-backdrop-filter: blur(10px); /* 为 Webkit 浏览器设置背景模糊效果 */
+            backdrop-filter: blur(10px); /* 设置背景模糊效果 */
+            border-radius: 10px; /* 设置圆角 */
+            padding: 1rem; /* 设置内边距 */
+            margin-bottom: 1rem; /* 设置下边距 */
+            display: none; /* 默认隐藏 */
+        }
+
+        #messages.active {
+            display: block; /* 激活时显示 */
+        }
+
+        .message-item {
+            background-color: rgba(255, 255, 255, 0.8); /* 设置半透明白色背景 */
+            border-radius: 10px; /* 设置圆角 */
+            padding: 15px; /* 设置内边距 */
+            margin-bottom: 15px; /* 设置下边距 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 添加阴影效果 */
+            position: relative; /* 设置相对定位 */
+        }
+
+        .message-item h3 {
+            margin-top: 0; /* 移除上边距 */
+            color: #0072ff; /* 设置文字颜色 */
+        }
+
+        .message-item small {
+            display: block; /* 设置为块级元素 */
+            color: #666; /* 设置文字颜色 */
+            margin-top: 5px; /* 设置上边距 */
+        }
+
+        .delete-message-button {
+            position: absolute; /* 设置绝对定位 */
+            top: 10px; /* 距顶部10像素 */
+            right: 10px; /* 距右侧10像素 */
+            background-color: #ff4d4d; /* 设置背景色 */
+            color: white; /* 设置文字颜色为白色 */
+            border: none; /* 移除边框 */
+            padding: 5px 10px; /* 设置内边距 */
+            border-radius: 5px; /* 设置圆角 */
+            cursor: pointer; /* 设置鼠标悬停时的光标样式为手型 */
+            transition: background-color 0.3s; /* 设置背景色的过渡效果 */
+        }
+
+        .delete-message-button:hover {
+            background-color: #ff1a1a; /* 悬停时改变背景色 */
+        }
+
+        /* 编辑表单样式 */
+        .modal-form .form-group {
+            margin-bottom: 15px; /* 设置下边距 */
+        }
+
+        /* 编辑表单标签 */
+        .modal-form label { 
+            display: block; /* 设置为块级元素 */
+            margin-bottom: 5px; /* 设置上边距 */
+            font-weight: bold; /* 设置字体加粗 */
+            color: #333; /* 设置文字颜色 */
+        }
+
+        /* 编辑表单输入框 */
+        .modal-form input {
+            width: 100%; /* 设置宽度为100% */
+            padding: 8px; /* 设置内边距 */
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .modal-form input[type="number"] {
+            width: 100%;
+        }
+
+        .modal-form input[type="date"] {
+            width: 100%;
+        }
+
+        .modal-form button {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(45deg, #0072ff, #00c6ff);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .modal-form button:hover {
+            background: linear-gradient(45deg, #005ae6, #00b3ff);
+        }
+
+        /* 删除确认模态框 */
+        #deleteConfirmModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s;
+        }
+
+        #deleteConfirmModal .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 10% auto;
+            padding: 30px;
+            border: none;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
+        }
+
+        #deleteConfirmModal .modal-content h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        #deleteConfirmModal .modal-body {
+            margin-top: 20px;
+        }
+
+        #deleteConfirmModal .button-group {
+            margin-top: 20px;
+        }
+
+        #deleteConfirmModal .button-group .button {
+            margin: 0 10px;
+        }
+
+        #deleteConfirmModal .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #deleteConfirmModal .close:hover {
+            color: #333;
+        }
+
+        /* 退回确认模态框 */
+        #returnConfirmModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s;
+        }
+
+        #returnConfirmModal .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 10% auto;
+            padding: 30px;
+            border: none;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
+        }
+
+        #returnConfirmModal .modal-content h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        #returnConfirmModal .modal-body {
+            margin-top: 20px;
+        }
+
+        #returnConfirmModal .button-group {
+            margin-top: 20px;
+        }
+
+        #returnConfirmModal .button-group .button {
+            margin: 0 10px;
+        }
+
+        #returnConfirmModal .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #returnConfirmModal .close:hover {
+            color: #333;
+        }
+
+        .warning-text {
+            color: #ff0000;
+            font-weight: bold;
+        }
+    </style>
+        <!-- 添加相应的 CSS 样式 -->
+    <style>
+        /* 编辑表单样式 */
+        .modal-form .form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-form .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .modal-form label {
+            min-width: 100px;
+            margin-right: 10px;
+            text-align: right;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .modal-form input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .modal-form input[type="number"],
+        .modal-form input[type="date"] {
+            width: auto;
+            min-width: 150px;
+        }
+
+        .modal-form button {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(45deg, #0072ff, #00c6ff);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .modal-form button:hover {
+            background: linear-gradient(45deg, #005ae6, #00b3ff);
+        }
+
+        /* 删除确认模态框 */
+        #deleteConfirmModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s;
+        }
+
+        #deleteConfirmModal .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 10% auto;
+            padding: 30px;
+            border: none;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
+        }
+
+        #deleteConfirmModal .modal-content h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        #deleteConfirmModal .modal-body {
+            margin-top: 20px;
+        }
+
+        #deleteConfirmModal .button-group {
+            margin-top: 20px;
+        }
+
+        #deleteConfirmModal .button-group .button {
+            margin: 0 10px;
+        }
+
+        #deleteConfirmModal .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #deleteConfirmModal .close:hover {
+            color: #333;
+        }
+
+        /* 退回确认模态框 */
+        #returnConfirmModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s;
+        }
+
+        #returnConfirmModal .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 10% auto;
+            padding: 30px;
+            border: none;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
+        }
+
+        #returnConfirmModal .modal-content h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        #returnConfirmModal .modal-body {
+            margin-top: 20px;
+        }
+
+        #returnConfirmModal .button-group {
+            margin-top: 20px;
+        }
+
+        #returnConfirmModal .button-group .button {
+            margin: 0 10px;
+        }
+
+        #returnConfirmModal .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #returnConfirmModal .close:hover {
+            color: #333;
+        }
+
+        .warning-text {
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        .modal-body {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .modal-body p {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .modal-body .warning-text {
+            color: #ff4d4d;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .button-group .button {
+            min-width: 100px;
+            padding: 10px 20px;
+        }
+
+        .button-group .button:first-child {
+            background: linear-gradient(45deg, #ff4d4d, #ff1a1a);
+        }
+
+        .button-group .button:first-child:hover {
+            background: linear-gradient(45deg, #ff1a1a, #ff0000);
+        }
+
+        .button-group .button:last-child {
+            background: linear-gradient(45deg, #666, #999);
+        }
+
+        .button-group .button:last-child:hover {
+            background: linear-gradient(45deg, #555, #888);
+        }
+
+        .modal-content strong {
+            color: #0072ff;
+        }
+    </style>
+        <!-- 添加相应的 CSS 样式 -->
+        <style>
+            /* 编辑表单样式 */
+            .modal-form .form-group {
+                margin-bottom: 15px;
+            }
+    
+            .modal-form .form-row {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+    
+            .modal-form label {
+                min-width: 100px;
+                margin-right: 10px;
+                text-align: right;
+                font-weight: bold;
+                color: #333;
+            }
+    
+            .modal-form input {
+                flex: 1;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-sizing: border-box;
+                font-size: 14px;
+            }
+    
+            .modal-form input[type="number"],
+            .modal-form input[type="date"] {
+                width: auto;
+                min-width: 150px;
+            }
+    
+            .modal-form button {
+                width: 100%;
+                padding: 10px;
+                background: linear-gradient(45deg, #0072ff, #00c6ff);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-top: 20px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+    
+            .modal-form button:hover {
+                background: linear-gradient(45deg, #005ae6, #00b3ff);
+            }
+    
+            /* 删除确认模态框 */
+            #deleteConfirmModal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0,0,0,0.4);
+                animation: fadeIn 0.3s;
+            }
+    
+            #deleteConfirmModal .modal-content {
+                background: rgba(255, 255, 255, 0.95);
+                margin: 10% auto;
+                padding: 30px;
+                border: none;
+                border-radius: 10px;
+                width: 90%;
+                max-width: 400px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                animation: slideIn 0.3s;
+            }
+    
+            #deleteConfirmModal .modal-content h2 {
+                margin-top: 0;
+                color: #333;
+                font-size: 24px;
+                text-align: center;
+            }
+    
+            #deleteConfirmModal .modal-body {
+                margin-top: 20px;
+            }
+    
+            #deleteConfirmModal .button-group {
+                margin-top: 20px;
+            }
+    
+            #deleteConfirmModal .button-group .button {
+                margin: 0 10px;
+            }
+    
+            #deleteConfirmModal .close {
+                color: #aaa;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: 0.3s;
+            }
+    
+            #deleteConfirmModal .close:hover {
+                color: #333;
+            }
+    
+            /* 退回确认模态框 */
+            #returnConfirmModal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0,0,0,0.4);
+                animation: fadeIn 0.3s;
+            }
+    
+            #returnConfirmModal .modal-content {
+                background: rgba(255, 255, 255, 0.95);
+                margin: 10% auto;
+                padding: 30px;
+                border: none;
+                border-radius: 10px;
+                width: 90%;
+                max-width: 400px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                animation: slideIn 0.3s;
+            }
+    
+            #returnConfirmModal .modal-content h2 {
+                margin-top: 0;
+                color: #333;
+                font-size: 24px;
+                text-align: center;
+            }
+    
+            #returnConfirmModal .modal-body {
+                margin-top: 20px;
+            }
+    
+            #returnConfirmModal .button-group {
+                margin-top: 20px;
+            }
+    
+            #returnConfirmModal .button-group .button {
+                margin: 0 10px;
+            }
+    
+            #returnConfirmModal .close {
+                color: #aaa;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: 0.3s;
+            }
+    
+            #returnConfirmModal .close:hover {
+                color: #333;
+            }
+    
+            .warning-text {
+                color: #ff0000;
+                font-weight: bold;
+            }
+    
+            .modal-body {
+                margin: 20px 0;
+                text-align: left;
+            }
+    
+            .modal-body p {
+                margin: 10px 0;
+                line-height: 1.5;
+            }
+    
+            .modal-body .warning-text {
+                color: #ff4d4d;
+                font-weight: bold;
+                margin-top: 20px;
+                text-align: center;
+            }
+    
+            .button-group {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+                margin-top: 20px;
+            }
+    
+            .button-group .button {
+                min-width: 100px;
+                padding: 10px 20px;
+            }
+    
+            .button-group .button:first-child {
+                background: linear-gradient(45deg, #ff4d4d, #ff1a1a);
+            }
+    
+            .button-group .button:first-child:hover {
+                background: linear-gradient(45deg, #ff1a1a, #ff0000);
+            }
+    
+            .button-group .button:last-child {
+                background: linear-gradient(45deg, #666, #999);
+            }
+    
+            .button-group .button:last-child:hover {
+                background: linear-gradient(45deg, #555, #888);
+            }
+    
+            .modal-content strong {
+                color: #0072ff;
+            }
+        </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <button class="toggle-sidebar">&#9664;</button>
+            <div class="user-info">
+                <span id="admName"></span>
+                <button id="logoutBtn">退出</button>
+            </div>
+            <h1>管理员控制台</h1>
+            <nav>
+                <a href="#notifications" class="menu-item active">消息通知</a>
+                <a href="#textbooks" class="menu-item">教材管理</a>
+                <a href="#pending-items" class="menu-item" id="pending-items-toggle">记录管理</a>
+                <div class="submenu" id="pending-items-submenu">
+                    <a href="#pending" class="menu-item">待处理需求</a>
+                    <a href="#purchase-records" class="menu-item">购书记录</a>
+                    <a href="#inbound-records" class="menu-item">入库记录</a>
+                    <a href="#outbound-records" class="menu-item">出库记录</a>
+                </div>
+                <a href="#account-management" class="menu-item">账号管理</a>
+            </nav>
+            <button class="message-button" id="openMessage">✉<span id="unreadIndicator" style="display:none;">•</span></button>
+        </aside>
+        <main class="main-content">
+            <section id="notifications" class="content-section active">
+                <h2>消息通知</h2>
+                <div class="notification">
+                    <p><strong>系统更新：</strong>新版本将于下周发布，请做好准备。</p>
+                </div>
+                <div class="notification">
+                    <p><strong>库存警告：</strong>《高等数学》教材库存不足，请及时补充。</p>
+                </div>
+            </section>
+            
+            <section id="pending" class="content-section">
+                <h2>待处理需求 <button class="refresh-button" onclick="refreshPendingRequests()">刷新</button></h2>
+                <div class="search-bar">
+                    <input type="text" id="pending-search" placeholder="搜索需求...">
+                    <button onclick="searchPendingRequests()">搜索</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>需求ID <span class="sort-icon" data-sort="reqId">&#9650;&#9660;</span></th>
+                            <th>用户ID</th>
+                            <th>用户</th>
+                            <th>书籍ID</th>
+                            <th>书籍名称</th>
+                            <th>数量</th>
+                            <th>状态</th>
+                            <th>提交时间 <span class="sort-icon" data-sort="reqDate">&#9650;&#9660;</span></th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingOrdersList">
+                        <!-- 这里将通过JavaScript动态添加需求 -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button id="prevPagePending">上一页</button>
+                    <select id="pageSelectPending" aria-label="选择页码"></select>
+                    <button id="nextPagePending">下一页</button>
+                </div>
+            </section>
+
+            <section id="purchase-records" class="content-section">
+                <h2>购书记录 <button class="refresh-button" onclick="refreshPurchaseRecords()">刷新</button></h2>
+                <div class="search-bar">
+                    <input type="text" id="purchase-search" placeholder="搜索购书记录...">
+                    <button onclick="searchPurchaseRecords()">搜索</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>购书单ID</th>
+                            <th>购书人ID</th>
+                            <th>书籍ID</th>
+                            <th>书籍名称</th>
+                            <th>数量</th>
+                            <th>购买日期</th>
+                            <th>订单状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseRecordsList">
+                        <!-- 这里将通过JavaScript动态添加购书记录 -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button id="prevPagePurchase">上一页</button>
+                    <select id="pageSelectPurchase" aria-label="选择页码"></select>
+                    <button id="nextPagePurchase">下一页</button>
+                </div>
+            </section>
+
+            <section id="inbound-records" class="content-section">
+                <h2>入库记录 <button class="refresh-button" onclick="refreshInbookRecords()">刷新</button></h2>
+                <div class="search-bar">
+                    <input type="text" id="inbook-search" placeholder="搜索入库记录...">
+                    <button onclick="searchInbookRecords()">搜索</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>记录ID</th>
+                            <th>书籍ID</th>
+                            <th>书籍名称</th>
+                            <th>入库数量</th>
+                            <th>入库日期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inbookRecordsList">
+                        <!-- 这里将通过JavaScript动态添加入库记录 -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button id="prevPageInbook">上一页</button>
+                    <select id="pageSelectInbook" aria-label="选择页码"></select>
+                    <button id="nextPageInbook">下一页</button>
+                </div>
+            </section>
+
+            <section id="outbound-records" class="content-section">
+                <h2>出库记录 <button class="refresh-button" onclick="refreshOutbookRecords()">刷新</button></h2>
+                <div class="search-bar">
+                    <input type="text" id="outbook-search" placeholder="搜索出库记录...">
+                    <button onclick="searchOutbookRecords()">搜索</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>记录ID</th>
+                            <th>出库人ID</th>
+                            <th>书籍ID</th>
+                            <th>书籍名称</th>
+                            <th>出库数量</th>
+                            <th>出库日期</th>
+                            <th>接收人ID</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="outbookRecordsList">
+                        <!-- 这里将通过JavaScript动态添加出库记录 -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button id="prevPageOutbook">上一页</button>
+                    <select id="pageSelectOutbook" aria-label="选页"></select>
+                    <button id="nextPageOutbook">下一页</button>
+                </div>
+            </section>
+            
+            <section id="textbooks" class="content-section">
+                <h2>教材管理 <button class="refresh-button" onclick="refreshTextbooks()">刷新</button></h2>
+                <div class="search-bar">
+                    <input type="text" id="textbook-search" placeholder="搜索教材...">
+                    <button onclick="searchTextbooks()">搜索</button>
+                    <!-- 添加新按钮 -->
+                    <button class="button" onclick="showAddBookModal()">添加教材</button>
+                </div>
+                <table id="all-textbooks">
+                    <thead>
+                        <tr>
+                            <th>教材ID</th>
+                            <th>教材</th>
+                            <th>作者</th>
+                            <th>出版社</th>
+                            <th>价格</th>
+                            <th>库存</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 这里的容将由 JavaScript 动态填充 -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button id="prevPage">上一页</button>
+                    <select id="pageSelect" aria-label="选择页码"></select>
+                    <button id="nextPage">下一页</button>
+                </div>
+            </section>
+            
+            <section id="account-management" class="content-section">
+                <h2>账号管理</h2>
+                <div id="account-type-selection">
+                    <button id="user-management-btn" class="button">用户账号管理</button>
+                    <button id="admin-management-btn" class="button">��理员账号</button>
+                </div>
+                
+                <div id="user-management" style="display: none;">
+                    <h3>用户账号管理</h3>
+                    <div class="search-bar">
+                        <input type="text" id="user-search" placeholder="搜索用户ID或账号...">
+                        <button onclick="searchUsers()">搜索</button>
+                    </div>
+                    <button class="button" onclick="showCreateUserModal()">创建用户账号</button>
+                    <table id="user-table">
+                        <thead>
+                            <tr>
+                                <th>用户ID</th>
+                                <th>账号</th>
+                                <th>用户名</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 用户数据将通过 JavaScript 动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="admin-management" style="display: none;">
+                    <h3>管理员账号管理</h3>
+                    <div class="search-bar">
+                        <input type="text" id="admin-search" placeholder="搜索管理员ID或账号...">
+                        <button onclick="searchAdmins()">搜索</button>
+                    </div>
+                    <button class="button" onclick="showCreateAdminModal()">创建管理员账号</button>
+                    <table id="admin-table">
+                        <thead>
+                            <tr>
+                                <th>管理员ID</th>
+                                <th>账号</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 管理员数据将通过 JavaScript 动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 在 main-content 部分添加新的消息部分 -->
+            <section id="messages" class="content-section">
+                <h2>消息中心 <button class="refresh-button" onclick="fetchMessages()">刷新</button></h2>
+                <div id="messageList">
+                    <!-- 消息将在这里动态添加 -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>订购教材</h2>
+            <div class="order-grid">
+                <div id="bookDetails" class="book-details"></div>
+                <form id="orderForm" class="order-form">
+                    <label for="orderQuantity">订购数量:</label>
+                    <input type="number" id="orderQuantity" name="orderQuantity" min="1" required>
+                    <p class="total-price">总价: <span id="totalPrice">0</span> 元</p>
+                    <button type="submit" class="submit-order">确认订购</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在 <body> 标签内添加新的模态框 -->
+    <div id="inbookModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>确认入库</h2>
+            <div class="modal-body">
+                <p>您确定要将这批书籍入库吗？</p>
+                <div class="button-group">
+                    <button id="confirmInbook" class="button">确认</button>
+                    <button id="cancelInbook" class="button">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在 <body> 标签内添加新的模态框 -->
+    <div id="processRequireModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>处理需求</h2>
+            <div id="requireDetails"></div>
+            <div class="button-group">
+                <button id="confirmProcess" class="button">确认处理</button>
+                <button id="cancelProcess" class="button">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在 <body> 标签内添加新的模态框 -->
+    <div id="completeRequireModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>完成需求</h2>
+            <p>该需求是否已经完成？</p>
+            <div class="button-group">
+                <button id="confirmComplete" class="button">确认</button>
+                <button id="cancelComplete" class="button">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在现有模态框之后添加新的模态框 -->
+    <div id="invoiceModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>单据详情</h2>
+            <div id="invoiceDetails"></div>
+        </div>
+    </div>
+
+    <!-- 添加创建用户的模态框 -->
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>创建用户账号</h2>
+            <form id="createUserForm" class="modal-form">
+                <input type="text" id="newUserAccount" placeholder="账号" required>
+                <input type="password" id="newUserPassword" placeholder="密码" required>
+                <button type="submit">创建</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加创建管理员的模态框 -->
+    <div id="createAdminModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>创建管理员账号</h2>
+            <form id="createAdminForm" class="modal-form">
+                <input type="text" id="newAdminAccount" placeholder="账号" required>
+                <input type="password" id="newAdminPassword" placeholder="密码" required>
+                <button type="submit">创建</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加编辑教材的模态框 -->
+    <div id="editBookModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>编辑教材信息</h2>
+            <form id="editBookForm" class="modal-form">
+                <input type="hidden" id="editBookId">
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="editBookName">教材名称：</label>
+                        <input type="text" id="editBookName" placeholder="请输入教材名称" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="editBookAuthor">作者：</label>
+                        <input type="text" id="editBookAuthor" placeholder="请输入作者" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="editBookPress">出版社：</label>
+                        <input type="text" id="editBookPress" placeholder="请输入出版社" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="editBookDescription">描述：</label>
+                        <input type="text" id="editBookDescription" placeholder="请输入描述">
+                    </div>
+                    <div class="form-row">
+                        <label for="editBookQuantity">库存数量：</label>
+                        <input type="number" id="editBookQuantity" placeholder="请输入库存数量" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="editBookPrice">价格：</label>
+                        <input type="number" id="editBookPrice" placeholder="请输入价格" step="0.01" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="editBookPublishdate">出版日期：</label>
+                        <input type="date" id="editBookPublishdate" required>
+                    </div>
+                </div>
+                <button type="submit">保存修改</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 在其他模态框后面添加新的添加教材模态框 -->
+    <div id="addBookModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>添加新教材</h2>
+            <form id="addBookForm" class="modal-form">
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="addBookName">教材名称：</label>
+                        <input type="text" id="addBookName" placeholder="请输入教材名称" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="addBookAuthor">作者：</label>
+                        <input type="text" id="addBookAuthor" placeholder="请输入作者" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="addBookPress">出版社：</label>
+                        <input type="text" id="addBookPress" placeholder="请输入出版社" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="addBookDescription">描述：</label>
+                        <input type="text" id="addBookDescription" placeholder="请输入描述">
+                    </div>
+                    <div class="form-row">
+                        <label for="addBookQuantity">库存数量：</label>
+                        <input type="number" id="addBookQuantity" placeholder="请输入库存数量" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="addBookPrice">价格：</label>
+                        <input type="number" id="addBookPrice" placeholder="请输入价格" step="0.01" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="addBookPublishdate">出版日期：</label>
+                        <input type="date" id="addBookPublishdate" required>
+                    </div>
+                </div>
+                <button type="submit">添加教材</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>确认删除</h2>
+            <div class="modal-body">
+                <p>您确定要删除这条已完成的需求记录吗？</p>
+                <div class="button-group">
+                    <button id="confirmDelete" class="button">确认</button>
+                    <button id="cancelDelete" class="button">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 退回确认模态框 -->
+    <div id="returnConfirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>确认退回</h2>
+            <div id="returnDetails" class="modal-body">
+                <!-- 这里将显示退回的需求详情 -->
+            </div>
+            <div class="button-group">
+                <button id="confirmReturn" class="button">确认</button>
+                <button id="cancelReturn" class="button">取消</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        /*----------------------------------------------------------------------------------------------*/
+        /* 教材管理相关函数 */
+        /*----------------------------------------------------------------------------------------------*/
+
+        // 获取教材列表
+        function fetchBooks() {
+            fetch('/demo/book/info/getAll', {  // 修改为正确的API路径
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.code === 200) {
+                    displayBooks(data.data);
+                    updatePagination(data.data.length);
+                } else {
+                    console.error('获取教材列表失败:', data.message);
+                    // 显示错误信息给用户
+                    const tbody = document.querySelector('#all-textbooks tbody');
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">获取教材列表失败</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // 显示错误信息给用户
+                const tbody = document.querySelector('#all-textbooks tbody');
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">获取教材列表时发生错误</td></tr>';
+            });
+        }
+
+        // 订购教材函数
+        function orderBook(bookId) {
+            // 获取教材详情
+            fetch(`/demo/book/info/getById?id=${bookId}`, {  // 修改为正确的API路径
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const book = data.data;
+                    const modal = document.getElementById('orderModal');
+                    const bookDetails = document.getElementById('bookDetails');
+                    bookDetails.innerHTML = `
+                        <p><strong>教材名称:</strong> ${book.bookName}</p>
+                        <p><strong>作者:</strong> ${book.bookAuthor}</p>
+                        <p><strong>出版社:</strong> ${book.bookPublisher}</p>
+                        <p><strong>单价:</strong> ${book.bookPrice} 元</p>
+                        <p><strong>当前库存:</strong> ${book.bookQuantity}</p>
+                    `;
+
+                    // 添加总价计算功能
+                    const quantityInput = document.getElementById('orderQuantity');
+                    const totalPriceSpan = document.getElementById('totalPrice');
+                    
+                    quantityInput.addEventListener('input', function() {
+                        const quantity = parseInt(this.value) || 0;
+                        const totalPrice = (quantity * book.bookPrice).toFixed(2);
+                        totalPriceSpan.textContent = totalPrice;
+                    });
+
+                    modal.style.display = "block";
+
+                    // 设置订单表单的提交事件
+                    document.getElementById('orderForm').onsubmit = function(e) {
+                        e.preventDefault();
+                        const quantity = parseInt(quantityInput.value);
+                        if (quantity <= 0) {
+                            alert('请输入有效的订购数量');
+                            return;
+                        }
+                        submitOrder(bookId);
+                    };
+                } else {
+                    alert('获取教材信息失败: ' + (data.msg || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('获取教材信息时发生错误');
+            });
+        }
+
+        // 修改提交订单函数
+        function submitOrder(bookId) {
+            const quantity = document.getElementById('orderQuantity').value;
+            const admInfo = getAdmInfoFromCookie();
+            if (!admInfo || !admInfo.admId) {
+                alert('管理员信息不完整，请重新登录');
+                return;
+            }
+
+            // 使用新的订购接口
+            fetch('/demo/book/work/orderBook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'buyBuyerId': admInfo.admId,
+                    'buyBookId': bookId,
+                    'buyQuantity': quantity,
+                    'buyDate': new Date().toISOString().split('T')[0]
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.code === 200) {
+                    alert('订购成功');
+                    document.getElementById('orderModal').style.display = "none";
+                    // 刷新教材列表和购书记录
+                    fetchBooks();
+                    getPurchaseRecords();
+                } else {
+                    alert('订购失败: ' + (data.msg || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('订购过程中发生错误');
+            });
+        }
+
+        // 修改删除教材函数
+        function deleteBook(bookId) {
+            if (confirm('确定要删除这本教材吗？')) {
+                fetch('/demo/book/info/delete', {  // 修改为正确的API路径
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'id': bookId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        alert('教材删除成功');
+                        fetchBooks(); // 刷新教材列表
+                    } else {
+                        alert('删除失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除教材时发生错误');
+                });
+            }
+        }
+
+        // 全局变量
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentSearchTerm = '';
+
+        // 搜索教材
+        function searchTextbooks() {
+            currentSearchTerm = document.getElementById('textbook-search').value;
+            currentPage = 1;
+            fetchBooks();
+        }
+
+        // 显示教材列表
+        function displayBooks(books) {
+            const tbody = document.querySelector('#all-textbooks tbody');
+            tbody.innerHTML = '';
+
+            // 过滤搜索结果
+            const filteredBooks = books.filter(book => 
+                book.bookName.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+                book.bookId.toString().includes(currentSearchTerm) ||
+                book.bookAuthor.toLowerCase().includes(currentSearchTerm.toLowerCase())
+            );
+
+            const startIndex = (currentPage - 1) * 10;
+            const endIndex = startIndex + 10;
+            const pageBooks = filteredBooks.slice(startIndex, endIndex);
+
+            if (pageBooks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">无匹配的教材</td></tr>';
+                return;
+            }
+
+            pageBooks.forEach(book => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${book.bookId}</td>
+                    <td>${book.bookName}</td>
+                    <td>${book.bookAuthor}</td>
+                    <td>${book.bookPublisher}</td>
+                    <td>${book.bookPrice}</td>
+                    <td>${book.bookQuantity}</td>
+                    <td>
+                        <button class="button" onclick="orderBook(${book.bookId})">订购</button>
+                        <button class="button" onclick="editBook(${book.bookId})">编辑</button>
+                        <button class="button" onclick="deleteBook(${book.bookId})">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updatePagination(filteredBooks.length);
+        }
+
+        // 更新分页
+        function updatePagination(totalItems) {
+            totalPages = Math.ceil(totalItems / 10);
+            const pageSelect = document.getElementById('pageSelect');
+            pageSelect.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `第 ${i} 页`;
+                if (i === currentPage) {
+                    option.selected = true;
+                }
+                pageSelect.appendChild(option);
+            }
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+        }
+
+        // 编辑教材
+        function editBook(bookId) {
+            // 获取教材详情
+            fetch(`/demo/book/info/getById?id=${bookId}`, {  // 修改为正确的API路径
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const book = data.data;
+                    const modal = document.getElementById('editBookModal');
+                    document.getElementById('editBookId').value = book.bookId;
+                    document.getElementById('editBookName').value = book.bookName;
+                    document.getElementById('editBookAuthor').value = book.bookAuthor;
+                    document.getElementById('editBookPress').value = book.bookPublisher;
+                    document.getElementById('editBookDescription').value = book.bookDescription;
+                    document.getElementById('editBookQuantity').value = book.bookQuantity;
+                    document.getElementById('editBookPrice').value = book.bookPrice;
+                    document.getElementById('editBookPublishdate').value = formatDate(book.bookPublishdate);
+                    modal.style.display = "block";
+
+                    // 设置编辑表单的提交事件
+                    document.getElementById('editBookForm').onsubmit = function(e) {
+                        e.preventDefault();
+                        saveEditedBook();
+                    };
+                } else {
+                    alert('获取教材信息失败: ' + (data.msg || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('获取教材信息时发生错误');
+            });
+        }
+
+        // 保存编辑后的教材信息
+        function saveEditedBook() {
+            const bookId = document.getElementById('editBookId').value;
+            const name = document.getElementById('editBookName').value;
+            const author = document.getElementById('editBookAuthor').value;
+            const press = document.getElementById('editBookPress').value;
+            const description = document.getElementById('editBookDescription').value;
+            const quantity = document.getElementById('editBookQuantity').value;
+            const price = document.getElementById('editBookPrice').value;
+            const publishdate = document.getElementById('editBookPublishdate').value;
+
+            fetch('/demo/book/info/update', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'id': bookId,
+                    'name': name,
+                    'author': author,
+                    'press': press,
+                    'description': description,
+                    'quantity': quantity,
+                    'price': price,
+                    'publishdate': publishdate
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.code === 200) {
+                    alert('修改成功');
+                    document.getElementById('editBookModal').style.display = "none";
+                    fetchBooks(); // 刷新教材列表
+                } else {
+                    alert('修改失败: ' + (data.msg || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('修改过程中发生错误');
+            });
+        }
+
+        // 分页事件监听器
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchBooks();
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                fetchBooks();
+            }
+        });
+
+        document.getElementById('pageSelect').addEventListener('change', (event) => {
+            currentPage = parseInt(event.target.value);
+            fetchBooks();
+        });
+
+        // 页面加载时获取教材列表
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchBooks();
+        });
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 菜单项点击事件处理 */
+        /*----------------------------------------------------------------------------------------------*/
+        // 为所有菜单项添加点击事件监听器，处理内容切换
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (this.id === 'pending-items-toggle') {
+                    return; // 不处理待处理事项的点击,因为它只用于展开/收起子菜单
+                }
+                e.preventDefault();
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                const targetId = this.getAttribute('href').slice(1);
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 侧边栏切换功能 */
+        /*----------------------------------------------------------------------------------------------*/
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        const toggleButton = document.querySelector('.toggle-sidebar');
+
+        // 处理侧边栏的展开和折叠
+        toggleButton.addEventListener('click', () => {
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                setTimeout(() => {
+                    mainContent.style.marginLeft = '30px';
+                    toggleButton.innerHTML = '&#9664;'; // 左箭头 (◀)
+                    sidebar.querySelector('h1').style.opacity = '1';
+                    sidebar.querySelector('nav').style.opacity = '1';
+                    sidebar.querySelector('.user-info').style.opacity = '1';
+                }, 50);
+            } else {
+                sidebar.querySelector('h1').style.opacity = '0';
+                sidebar.querySelector('nav').style.opacity = '0';
+                sidebar.querySelector('.user-info').style.opacity = '0';
+                setTimeout(() => {
+                    sidebar.classList.add('collapsed');
+                    mainContent.style.marginLeft = '60px';
+                    toggleButton.innerHTML = '&#9654;'; // 右箭头 (▶)
+                }, 50);
+            }
+        });
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 响应式设计 - 窗口大小变化处理 */
+        /*----------------------------------------------------------------------------------------------*/
+        // 根据窗口大小调整侧边栏的显示状态
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.querySelector('h1').style.opacity = '0';
+                sidebar.querySelector('nav').style.opacity = '0';
+                sidebar.querySelector('.user-info').style.opacity = '0';
+                setTimeout(() => {
+                    sidebar.classList.add('collapsed');
+                    mainContent.style.marginLeft = '60px';
+                    toggleButton.innerHTML = '&#9654;';
+                }, 50);
+            } else {
+                sidebar.classList.remove('collapsed');
+                setTimeout(() => {
+                    mainContent.style.marginLeft = '30px';
+                    toggleButton.innerHTML = '&#9664;';
+                    sidebar.querySelector('h1').style.opacity = '1';
+                    sidebar.querySelector('nav').style.opacity = '1';
+                    sidebar.querySelector('.user-info').style.opacity = '1';
+                }, 50);
+            }
+        });
+
+        window.dispatchEvent(new Event('resize'));
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 待处理事项子菜单展开/收起功能 */
+        /*----------------------------------------------------------------------------------------------*/
+        const pendingItemsToggle = document.getElementById('pending-items-toggle');
+        const pendingItemsSubmenu = document.getElementById('pending-items-submenu');
+
+        // 处理待处理事项子菜单的展开和收起
+        pendingItemsToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            pendingItemsSubmenu.classList.toggle('active');
+        });
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 从 cookie 获取管理员信息并显示管理员名 */
+        /*----------------------------------------------------------------------------------------------*/
+        // 从cookie中获取管理员信息
+        function getAdmInfoFromCookie() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'admInfo') {
+                    return JSON.parse(decodeURIComponent(value));
+                }
+            }
+            return null;
+        }
+
+        const admInfo = getAdmInfoFromCookie();
+        if (admInfo) {
+            const admName = admInfo.admName || '管员';
+            document.getElementById('admName').textContent = `欢迎, ${admName}`;
+        } else {
+            // 如果没有管理员信息,重定向到登录页面
+            location.href = "/demo/login_adm";
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 退出登录 */
+        /*----------------------------------------------------------------------------------------------*/
+        // 处理退出登录操作
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            // 清除 cookie
+            document.cookie = "admInfo=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            // 重定向到录页面
+            location.href = "[[ @{/adm_login} ]]";
+        });
+
+        // 页面加载时获取并渲染各种记录
+        window.addEventListener('load', () => {
+            getAllRequireInfo();
+            getPurchaseRecords();
+            getInbookRecords();
+            getOutbookRecords();
+        });
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 格式化日期 */
+        /*----------------------------------------------------------------------------------------------*/
+        // 将日期字符串格式化为 YYYY-MM-DD 格式
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit'
+            }).replace(/\//g, '-'); // 将斜杠替换为短横线
+        }
+
+        /*----------------------------------------------------------------------------------------------*/
+        /* 获取状态文本 */
+        /*----------------------------------------------------------------------------------------------*/
+        // 根据状态码返回对应的状态文本
+        function getStatusText(status) {
+            switch(status) {
+                case 0: return '未处理';
+                case 1: return '正在处理';
+                case 2: return '待取';
+                case 3: return '已完成';
+                default: return '未知状态';
+            }
+        }
+
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------需求记录处理--------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
+        let currentPendingPage = 1;
+        let totalPendingPages = 1;
+        let currentPendingSearchTerm = '';
+        let requireInfoList = []; // 存储所有需求信息
+        let currentSort = { field: 'reqId', order: 'desc' }; // 当前排序状态
+
+        function attachDeleteListeners() {
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const reqId = this.getAttribute('data-req-id');
+                    openDeleteConfirmModal(reqId);
+                });
+            });
+        }
+
+        function openDeleteConfirmModal(reqId) {
+            const modal = document.getElementById('deleteConfirmModal');
+            const confirmBtn = document.getElementById('confirmDelete');
+            const cancelBtn = document.getElementById('cancelDelete');
+            const closeBtn = modal.querySelector('.close');
+
+            modal.style.display = "block";
+
+            confirmBtn.onclick = function() {
+                deleteRequire(reqId);
+                modal.style.display = "none";
+            }
+
+            cancelBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            closeBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        }
+
+        function deleteRequire(reqId) {
+            fetch('/demo/require/deleteRequire', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqId': reqId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('需求记录已成功删除');
+                    getAllRequireInfo(); // 刷新需求列表
+                } else {
+                    alert('删除失败: ' + (data.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('删除需求记录时发生错误');
+            });
+        }
+
+
+        function getAllRequireInfo() {
+            // 这里应该是从后端获取数据的API调用
+            fetch('/demo/require/getAllRequireInfo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    requireInfoList = data.data; 
+                    sortRequireInfoList(); // 对获取的数据进行排序
+                    displayPendingRequests();
+                } else {
+                    console.error('获取需求信息失败:', data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function sortRequireInfoList() {
+            requireInfoList.sort((a, b) => {
+                // 首先按状态排序
+                if (a.reqIsfinished !== b.reqIsfinished) {
+                    // 正在处理 (1) 排在最前面
+                    if (a.reqIsfinished === 1) return -1;
+                    if (b.reqIsfinished === 1) return 1;
+                    // 未处理 (0) 排在第二位
+                    if (a.reqIsfinished === 0) return -1;
+                    if (b.reqIsfinished === 0) return 1;
+                    // 待取 (2) 排在第三位
+                    if (a.reqIsfinished === 2) return -1;
+                    if (b.reqIsfinished === 2) return 1;
+                    // 已完成 (3) 排在最后
+                    return b.reqIsfinished - a.reqIsfinished;
+                }
+                
+                // 如果状态相同，按照选择的排序字段进行排序
+                if (currentSort.field === 'reqId') {
+                    return currentSort.order === 'asc' ? a.reqId - b.reqId : b.reqId - a.reqId;
+                } else if (currentSort.field === 'reqDate') {
+                    const dateA = new Date(a.reqDate);
+                    const dateB = new Date(b.reqDate);
+                    return currentSort.order === 'asc' ? dateA - dateB : dateB - dateA;
+                } else {
+                    // 对于其他字段，如果需要的话，可以在这里添加更多的排序逻辑
+                    if (a[currentSort.field] < b[currentSort.field]) return currentSort.order === 'asc' ? -1 : 1;
+                    if (a[currentSort.field] > b[currentSort.field]) return currentSort.order === 'asc' ? 1 : -1;
+                    return 0;
+                }
+            });
+        }
+
+        function displayPendingRequests() {
+            const pendingOrdersList = document.getElementById('pendingOrdersList');
+            pendingOrdersList.innerHTML = '';
+
+            const filteredRequests = requireInfoList.filter(req => {
+                const reqIdString = req.reqId ? req.reqId.toString().toLowerCase() : '';
+                const userNameLower = req.userName ? req.userName.toLowerCase() : '';
+                const bookNameLower = req.bookName ? req.bookName.toLowerCase() : '';
+                const searchTermLower = currentPendingSearchTerm.toLowerCase();
+
+                return reqIdString.includes(searchTermLower) ||
+                       userNameLower.includes(searchTermLower) ||
+                       bookNameLower.includes(searchTermLower);
+            });
+
+            const startIndex = (currentPendingPage - 1) * 10;
+            const endIndex = startIndex + 10;
+            const pageRequests = filteredRequests.slice(startIndex, endIndex);
+
+            if (pageRequests.length === 0) {
+                pendingOrdersList.innerHTML = '<tr><td colspan="9" style="text-align: center;">无待处理需求</td></tr>';
+                return;
+            }
+
+            pageRequests.forEach(req => {
+                const row = document.createElement('tr');
+                const isProcessDisabled = req.reqIsfinished === 3; // 已完成状态不可处理
+                const showReturnButton = req.reqIsfinished !== 3; // 非完成状态显示退回按钮
+                const showDeleteButton = req.reqIsfinished === 3; // 已完成状态显示删除按钮
+                const showInvoiceButton = req.reqIsfinished === 2; // 待取状态显示查看单据按钮
+                row.innerHTML = `
+                    <td>${req.reqId || ''}</td>
+                    <td>${req.userId || ''}</td>
+                    <td>${req.userName || ''}</td>
+                    <td>${req.bookId || ''}</td>
+                    <td>${req.bookName || ''}</td>
+                    <td>${req.reqQuantity || ''}</td>
+                    <td class="status-${req.reqIsfinished || 0}">${getStatusText(req.reqIsfinished)}</td>
+                    <td>${formatDate(req.reqDate) || ''}</td>
+                    <td>
+                        <button class="button process-button" data-req-id="${req.reqId}" ${isProcessDisabled ? 'disabled' : ''}>
+                            ${req.reqIsfinished === 2 ? '完成' : '处理'}
+                        </button>
+                        ${showReturnButton ? `
+                            <button class="button return-button" data-req-id="${req.reqId}" 
+                                    data-book-id="${req.bookId}" 
+                                    data-quantity="${req.reqQuantity}"
+                                    data-user-id="${req.userId}"
+                                    data-user-name="${req.userName}"
+                                    data-book-name="${req.bookName}"
+                                    data-status="${req.reqIsfinished}">
+                                退回
+                            </button>
+                        ` : ''}
+                        ${showDeleteButton ? `
+                            <button class="button delete-button" data-req-id="${req.reqId}">
+                                删除
+                            </button>
+                        ` : ''}
+                        ${showInvoiceButton ? `<button class="button show-invoice-button" data-req-id="${req.reqId}">查看单据</button>` : ''}
+                    </td>
+                `;
+                pendingOrdersList.appendChild(row);
+            });
+
+            attachProcessListeners();
+            attachReturnListeners(); // 添加退回按钮的事件监听
+            attachDeleteListeners(); // 确保这个也被调用
+            attachShowInvoiceListeners();
+            updatePendingPagination(filteredRequests.length);
+        }
+
+        function attachProcessListeners() {
+            document.querySelectorAll('.process-button:not([disabled])').forEach(button => {
+                button.addEventListener('click', function() {
+                    const reqId = this.getAttribute('data-req-id');
+                    const req = requireInfoList.find(r => r.reqId == reqId);
+                    if (req.reqIsfinished === 2) {
+                        openCompleteModal(reqId);
+                    } else {
+                        openProcessModal(reqId);
+                    }
+                });
+            });
+        }
+
+        // 添加退回按钮的事件监听器
+        function attachReturnListeners() {
+            document.querySelectorAll('.return-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const reqId = this.getAttribute('data-req-id');
+                    const bookId = this.getAttribute('data-book-id');
+                    const quantity = this.getAttribute('data-quantity');
+                    const userId = this.getAttribute('data-user-id');
+                    const userName = this.getAttribute('data-user-name');
+                    const bookName = this.getAttribute('data-book-name');
+                    const status = parseInt(this.getAttribute('data-status'));
+                    
+                    openReturnConfirmModal(reqId, bookId, quantity, userId, userName, bookName, status);
+                });
+            });
+        }
+
+        // 添加打开退回确认模态框的函数
+        function openReturnConfirmModal(reqId, bookId, quantity, userId, userName, bookName, status) {
+            const modal = document.getElementById('returnConfirmModal');
+            const confirmBtn = document.getElementById('confirmReturn');
+            const cancelBtn = document.getElementById('cancelReturn');
+            const closeBtn = modal.querySelector('.close');
+            const returnDetails = document.getElementById('returnDetails');
+
+            // 显示退回需求的详细信息
+            returnDetails.innerHTML = `
+                <p><strong>需求ID:</strong> ${reqId}</p>
+                <p><strong>用户:</strong> ${userName}</p>
+                <p><strong>教材:</strong> ${bookName}</p>
+                <p><strong>数量:</strong> ${quantity}</p>
+                <p><strong>当前状态:</strong> ${getStatusText(status)}</p>
+                <p class="warning-text">退回后将无法恢复，请确认是否继续？</p>
+            `;
+
+            modal.style.display = "block";
+
+            confirmBtn.onclick = function() {
+                returnRequire(reqId, bookId, quantity, userId, userName, bookName, status);
+                modal.style.display = "none";
+            }
+
+            cancelBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            closeBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        }
+
+        // 处理退回需求的函数
+        async function returnRequire(reqId, bookId, quantity, userId, userName, bookName, status) {
+            const admInfo = getAdmInfoFromCookie();
+            if (!admInfo || !admInfo.admId) {
+                alert('管理员信息不完整，请重新登录');
+                return;
+            }
+
+            try {
+                // 1. 更新需求状态为已完成
+                const updateReqResponse = await fetch('/demo/require/updateRequire', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'reqId': reqId,
+                        'reqIsfinished': 3
+                    })
+                });
+                const updateReqData = await updateReqResponse.json();
+                if (updateReqData.code !== 200) {
+                    throw new Error('更新需求状态失败');
+                }
+
+                // 2. 如果是待取状态，恢复书籍数量
+                if (status === 2) {
+                    const updateQuantityResponse = await fetch('/demo/book/info/updateQuantity', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            'id': bookId,
+                            'num': quantity // 加回原本减去的数量
+                        })
+                    });
+                    const updateQuantityData = await updateQuantityResponse.json();
+                    if (updateQuantityData.code !== 200) {
+                        throw new Error('更新书籍数量失败');
+                    }
+                }
+
+                // 3. 发送退回通知消息
+                const currentDate = new Date().toISOString().split('T')[0];
+                const msgTitle = `关于《${bookName}》教材需求的退回通知`;
+                const msgContent = `尊敬的${userName}：<br><br>` +
+                                 `您于${currentDate}提交的${quantity}本《${bookName}》教材需求已被退回。<br><br>` +
+                                 `如有疑问，请联系管理员了解具体原因。<br><br>` +
+                                 `如仍有需求，请重新提交申请。`;
+
+                const sendMsgResponse = await fetch('/demo/msg/sendMsg', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'msgTitle': msgTitle,
+                        'msgContent': msgContent,
+                        'msgFromId': admInfo.admId,
+                        'msgToId': userId,
+                        'msgDate': currentDate
+                    })
+                });
+                const sendMsgData = await sendMsgResponse.json();
+                if (sendMsgData.code !== 200) {
+                    throw new Error('发送通知消息失败');
+                }
+
+                // 所有操作成功
+                alert('需求已成功退回，并已通知用户');
+                getAllRequireInfo(); // 刷新需求列表
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('退回需求时发生错误: ' + error.message);
+            }
+        }
+
+        // 添加新的函数来附加查看单据按钮的监听器
+        function attachShowInvoiceListeners() {
+            document.querySelectorAll('.show-invoice-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const reqId = this.getAttribute('data-req-id');
+                    showInvoiceDetails(reqId);
+                });
+            });
+        }
+
+        // 添加新的函数来显示单据详情
+        function showInvoiceDetails(reqId) {
+            fetch(`/demo/invoices/selectInvoicesByReqId?reqId=${reqId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const modal = document.getElementById('invoiceModal');
+                    const invoiceDetails = document.getElementById('invoiceDetails');
+                    invoiceDetails.innerHTML = '';
+
+                    data.data.forEach(invoice => {
+                        invoiceDetails.innerHTML += `
+                            <p><strong>单据ID:</strong> ${invoice.id}</p>
+                            <p><strong>需求ID:</strong> ${invoice.reqId}</p>
+                            <p><strong>单据号:</strong> ${invoice.num}</p>
+                            <p><strong>密码:</strong> ${invoice.sec}</p>
+                            <p><strong>日期:</strong> ${formatDate(invoice.date)}</p>
+                            <hr>
+                        `;
+                    });
+
+                    modal.style.display = "block";
+
+                    const closeBtn = modal.querySelector('.close');
+                    closeBtn.onclick = function() {
+                        modal.style.display = "none";
+                    }
+
+                    window.onclick = function(event) {
+                        if (event.target == modal) {
+                            modal.style.display = "none";
+                        }
+                    }
+                } else {
+                    alert('获取单据信息失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('获取单据信息时发生错误');
+            });
+        }
+
+        function openProcessModal(reqId) {
+            const modal = document.getElementById('processRequireModal');
+            const confirmBtn = document.getElementById('confirmProcess');
+            const cancelBtn = document.getElementById('cancelProcess');
+            const closeBtn = modal.querySelector('.close');
+            const requireDetails = document.getElementById('requireDetails');
+
+            // 获取需求详细信息
+            const req = requireInfoList.find(r => r.reqId == reqId);
+            if (req) {
+                // 获取书籍库存信息
+                fetch(`/demo/book/info/getById?id=${req.bookId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const book = data.data;
+                        requireDetails.innerHTML = `
+                            <p><strong>需求ID:</strong> ${req.reqId}</p>
+                            <p><strong>用户ID:</strong> ${req.userId}</p>
+                            <p><strong>用户名:</strong> ${req.userName}</p>
+                            <p><strong>书籍ID:</strong> ${req.bookId}</p>
+                            <p><strong>书籍名称:</strong> ${req.bookName}</p>
+                            <p><strong>需求数量:</strong> ${req.reqQuantity}</p>
+                            <p><strong>当前库存:</strong> ${book.bookQuantity}</p>
+                            <p><strong>提交日期:</strong> ${formatDate(req.reqDate)}</p>
+                        `;
+                    } else {
+                        console.error('获取书籍信息失败:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    requireDetails.innerHTML = '<p>获取书籍库存信息时发生错误</p>';
+                });
+            }
+
+            modal.style.display = "block";
+
+            confirmBtn.onclick = function() {
+                processRequire(reqId, req);
+                modal.style.display = "none";
+            }
+
+            cancelBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            closeBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        }
+
+        function processRequire(reqId, req) {
+            fetch('/demo/require/solveRequire', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqId': reqId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('需求处理成功,状态已更新为待取');
+                    sendProcessMessage(req, true);
+                    // 处理成功后,添加单据
+                    addInvoices(reqId);
+                    getAllRequireInfo(); // 刷新需求列表
+                } else if (data.code === 300) {
+                    alert('教材不足,即将跳转到教材订购页面');
+                    sendProcessMessage(req, false);
+                    document.getElementById('textbook-search').value = req.bookName;
+                    document.querySelector('a[href="#textbooks"]').click();
+                    searchTextbooks();
+                } else {
+                    alert('处理失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('处理需求时发生错误');
+            });
+        }
+
+        function sendProcessMessage(req, isEnoughStock) {
+            const admInfo = getAdmInfoFromCookie();
+            if (!admInfo || !admInfo.admId) {
+                console.error('管理员信息不完整');
+                return;
+            }
+
+            const currentDate = new Date().toISOString().split('T')[0];
+            const msgTitle = `关于《${req.bookName}》教材需求的处理通知`;
+            
+            // 构建更详细的消息内容，使用<br>替代\n
+            let msgContent = `尊敬的${req.userName}：<br><br>`;
+            
+            if (isEnoughStock) {
+                msgContent += `您于${formatDate(req.reqDate)}提交的${req.reqQuantity}本《${req.bookName}》教材需求已经处理完成。<br><br>` +
+                             `教材已准备就绪，请您在需求请求界面查询单据密码，凭密码到指定地点领取教材。<br><br>` +
+                             `教材信息：<br>` +
+                             `- 书名：《${req.bookName}》<br>` +
+                             `- 数量：${req.reqQuantity}本<br><br>` +
+                             `请及时领取，如有问题请联系管理员。`;
+            } else {
+                msgContent += `您于${formatDate(req.reqDate)}提交的${req.reqQuantity}本《${req.bookName}》教材需求已收到。<br><br>` +
+                             `很抱歉，当前库存不足，我们已经安排采购。采购到位后会第一时间通知您。<br><br>` +
+                             `教材信息：<br>` +
+                             `- 书名：《${req.bookName}》<br>` +
+                             `- 需求数量：${req.reqQuantity}本<br><br>` +
+                             `请耐心等待，我们会加快处理速度。如有疑问请联系管理员。`;
+            }
+
+            fetch('/demo/msg/sendMsg', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'msgTitle': msgTitle,
+                    'msgContent': msgContent,
+                    'msgFromId': admInfo.admId,
+                    'msgToId': req.userId,
+                    'msgDate': currentDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    console.log('消息发送成功');
+                } else {
+                    console.error('消息发送失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('发送消息时发生错误:', error);
+            });
+        }
+
+        function addInvoices(reqId) {
+            const currentDate = new Date().toISOString().split('T')[0]; // 获取当前日期,格式为 YYYY-MM-DD
+            fetch('/demo/invoices/addInvoices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqId': reqId,
+                    'date': currentDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    console.log('单据添加成功');
+                } else {
+                    console.error('单据添加失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('添加单据时发生错误:', error);
+            });
+        }
+
+        function openCompleteModal(reqId) {
+            const modal = document.getElementById('completeRequireModal');
+            const confirmBtn = document.getElementById('confirmComplete');
+            const cancelBtn = document.getElementById('cancelComplete');
+            const closeBtn = modal.querySelector('.close');
+
+            modal.style.display = "block";
+
+            confirmBtn.onclick = function() {
+                completeRequire(reqId);
+                modal.style.display = "none";
+            }
+
+            cancelBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            closeBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        }
+
+        function completeRequire(reqId) {
+            fetch('/demo/require/updateRequire', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqId': reqId,
+                    'reqIsfinished': 3
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const req = requireInfoList.find(r => r.reqId == reqId);
+                    if (req) {
+                        outBook(req);
+                        // 添加删除单据的操作
+                        deleteInvoices(reqId);
+                    } else {
+                        alert('需求信息不存在,无法完成出库操作');
+                    }
+                } else {
+                    alert('更新失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('更新需求状态时发生错误');
+            });
+        }
+
+        // 添加新的函数来删除单据
+        function deleteInvoices(reqId) {
+            fetch('/demo/invoices/deleteInvoicesByReqId', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqId': reqId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    console.log('单据删除成功');
+                } else {
+                    console.error('单据删除失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('删除单据时发生错误:', error);
+            });
+        }
+
+        function outBook(req) {
+            const admInfo = getAdmInfoFromCookie();
+            if (!admInfo || !admInfo.admId) {
+                alert('管理员信息不完整,请重新登录');
+                return;
+            }
+
+            fetch('/demo/book/work/outBook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'outBorrowerId': admInfo.admId,
+                    'outBookId': req.bookId,
+                    'outQuantity': req.reqQuantity,
+                    'date': new Date().toISOString().split('T')[0],
+                    'outToId': req.userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('需求已完成,出库成功');
+                    getAllRequireInfo(); // 刷新需求列表
+                    getOutbookRecords(); // 刷新出库记录
+                } else {
+                    alert('出库失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('出库过程中发生错误');
+            });
+        }
+
+        function updatePendingPagination(totalItems) {
+            totalPendingPages = Math.ceil(totalItems / 10);
+            const pageSelect = document.getElementById('pageSelectPending');
+            pageSelect.innerHTML = '';
+            for (let i = 1; i <= totalPendingPages; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `第 ${i} 页`;
+                if (i === currentPendingPage) {
+                    option.selected = true;
+                }
+                pageSelect.appendChild(option);
+            }
+            document.getElementById('prevPagePending').disabled = currentPendingPage === 1;
+            document.getElementById('nextPagePending').disabled = currentPendingPage === totalPendingPages;
+        }
+
+        function searchPendingRequests() {
+            currentPendingSearchTerm = document.getElementById('pending-search').value;
+            currentPendingPage = 1;
+            displayPendingRequests();
+        }
+
+        // 修改这些事件监听器
+        document.getElementById('prevPagePending').addEventListener('click', () => {
+            if (currentPendingPage > 1) {
+                currentPendingPage--;
+                displayPendingRequests();
+            }
+        });
+
+        document.getElementById('nextPagePending').addEventListener('click', () => {
+            if (currentPendingPage < totalPendingPages) {
+                currentPendingPage++;
+                displayPendingRequests();
+            }
+        });
+
+        document.getElementById('pageSelectPending').addEventListener('change', (event) => {
+            currentPendingPage = parseInt(event.target.value);
+            displayPendingRequests();
+        });
+
+        // 页面加载时获取待处理需求
+        document.addEventListener('DOMContentLoaded', function() {
+            getAllRequireInfo();
+        });
+
+        // 排序并渲染需求信息列表
+        function sortAndRenderRequireInfo() {
+            const sortedList = [...requireInfoList].sort((a, b) => {
+                let aValue = a[currentSort.field];
+                let bValue = b[currentSort.field];
+                
+                if (currentSort.field === 'reqDate') {
+                    aValue = new Date(aValue);
+                    bValue = new Date(bValue);
+                }
+
+                if (aValue < bValue) return currentSort.order === 'asc' ? -1 : 1;
+                if (aValue > bValue) return currentSort.order === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderRequireInfo(sortedList);
+        }
+
+        // 渲染需求信息列表
+        function renderRequireInfo(list) {
+            const pendingOrdersList = document.getElementById('pendingOrdersList');
+            pendingOrdersList.innerHTML = list.map(info => `
+                <tr>
+                    <td>${info.reqId}</td>
+                    <td>${info.userId}</td>
+                    <td>${info.userName}</td>
+                    <td>${info.bookId}</td>
+                    <td>${info.bookName}</td>
+                    <td>${info.reqQuantity}</td>
+                    <td class="status-${info.reqIsfinished}">${getStatusText(info.reqIsfinished)}</td>
+                    <td>${formatDate(info.reqDate)}</td>
+                    <td>
+                        <button class="button" onclick="processRequire(${info.reqId})">处理</button>
+                        <button class="button" onclick="cancelRequire(${info.reqId})">取消</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 添加排序事件监听器
+        document.querySelectorAll('.sort-icon').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const field = this.dataset.sort;
+                if (currentSort.field === field) {
+                    currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.field = field;
+                    currentSort.order = 'desc'; // 默认为降序
+                }
+                sortRequireInfoList();
+                currentPendingPage = 1; // 重置到第一页
+                displayPendingRequests();
+            });
+        });
+
+        // 取消需求
+        function cancelRequire(reqId) {
+            console.log(`取消需求: ${reqId}`);
+            // 这里可以添加消需求的逻辑,例调用删除需求的API
+        }
+
+//----------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------购书记录处理--------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
+        let purchaseRecords = []; // 存储所有购书记录
+        let currentPurchasePage = 1;
+        let totalPurchasePages = 1;
+        let currentPurchaseSearchTerm = '';
+
+        function getPurchaseRecords() {
+            fetch('/demo/book/buy/getInfo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    purchaseRecords = data.data;
+                    displayPurchaseRecords();
+                    updatePurchasePagination();
+                } else {
+                    console.error('获取购书记录失败:', data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function getBuyStateText(state) {
+            switch(state) {
+                case 0: return '未付款';
+                case 1: return '已付款未到';
+                case 2: return '已付款已到';
+                default: return '未知状态';
+            }
+        }
+
+        function displayPurchaseRecords() {
+            const purchaseRecordsList = document.getElementById('purchaseRecordsList');
+            purchaseRecordsList.innerHTML = '';
+
+            const filteredRecords = purchaseRecords.filter(record => 
+                record.buyId.toString().includes(currentPurchaseSearchTerm) ||
+                record.buyBuyerId.toString().includes(currentPurchaseSearchTerm) ||
+                record.buyBookId.toString().includes(currentPurchaseSearchTerm) ||
+                record.bookName.toLowerCase().includes(currentPurchaseSearchTerm.toLowerCase())
+            );
+
+            // 对记录进行倒序排序（按购书ID倒序）
+            filteredRecords.sort((a, b) => b.buyId - a.buyId);
+
+            const startIndex = (currentPurchasePage - 1) * 10;
+            const endIndex = startIndex + 10;
+            const pageRecords = filteredRecords.slice(startIndex, endIndex);
+
+            if (pageRecords.length === 0) {
+                purchaseRecordsList.innerHTML = '<tr><td colspan="8" style="text-align: center;">无该购书记录</td></tr>';
+                return;
+            }
+
+            pageRecords.forEach(record => {
+                const row = document.createElement('tr');
+                const isInbookDisabled = record.buyState !== 1; // 只有已付款未到状态(buyState === 1)可入库
+                const isDeleteDisabled = record.buyState !== 2; // 只有已入库状态(buyState === 2)可删除
+                row.innerHTML = `
+                    <td>${record.buyId}</td>
+                    <td>${record.buyBuyerId}</td>
+                    <td>${record.buyBookId}</td>
+                    <td>${record.bookName}</td>
+                    <td>${record.buyQuantity}</td>
+                    <td>${formatDate(record.buyDate)}</td>
+                    <td>${getBuyStateText(record.buyState)}</td>
+                    <td>
+                        <button class="button inbook-button" data-buy-buyer-id="${record.buyBuyerId}" data-buy-id="${record.buyId}" data-book-id="${record.buyBookId}" data-buy-book-name="${record.bookName}" ${isInbookDisabled ? 'disabled' : ''}>
+                            入库
+                        </button>
+                        <button class="button delete-purchase" data-id="${record.buyId}" ${isDeleteDisabled ? 'disabled' : ''}>
+                            删除
+                        </button>
+                    </td>
+                `;
+                purchaseRecordsList.appendChild(row);
+            });
+
+            attachInbookListeners();
+            attachPurchaseDeleteListeners();
+        }
+
+        function attachInbookListeners() {
+            document.querySelectorAll('.inbook-button:not([disabled])').forEach(button => {
+                button.addEventListener('click', function() {
+                    const buyId = this.getAttribute('data-buy-id');
+                    const bookId = this.getAttribute('data-book-id');
+                    const buyerId = this.getAttribute('data-buy-buyer-id');
+                    const bookName = this.getAttribute('data-buy-book-name');
+                    openInbookModal(buyId, bookId,buyerId, bookName);
+                });
+            });
+        }
+
+        function attachPurchaseDeleteListeners() {
+            document.querySelectorAll('.delete-purchase:not([disabled])').forEach(button => {
+                button.addEventListener('click', function() {
+                    const buyId = this.getAttribute('data-id');
+                    if (confirm('确定要删除这条购书记录吗？')) {
+                        deletePurchaseRecord(buyId);
+                    }
+                });
+            });
+        }
+
+        function deletePurchaseRecord(buyId) {
+            fetch('/demo/book/buy/delete', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'id': buyId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('购书记录删除成功');
+                    getPurchaseRecords(); // 刷新购书记录列表
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('删除购书记录时发生错误');
+            });
+        }
+
+        function updatePurchasePagination() {
+            const filteredRecords = purchaseRecords.filter(record => 
+                record.buyId.toString().includes(currentPurchaseSearchTerm) ||
+                record.buyBuyerId.toString().includes(currentPurchaseSearchTerm) ||
+                record.buyBookId.toString().includes(currentPurchaseSearchTerm) ||
+                record.bookName.toLowerCase().includes(currentPurchaseSearchTerm.toLowerCase())
+            );
+
+            totalPurchasePages = Math.ceil(filteredRecords.length / 10);
+            const pageSelect = document.getElementById('pageSelectPurchase');
+            pageSelect.innerHTML = '';
+            for (let i = 1; i <= totalPurchasePages; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `第 ${i} 页`;
+                if (i === currentPurchasePage) {
+                    option.selected = true;
+                }
+                pageSelect.appendChild(option);
+            }
+            document.getElementById('prevPagePurchase').disabled = currentPurchasePage === 1;
+            document.getElementById('nextPagePurchase').disabled = currentPurchasePage === totalPurchasePages;
+        }
+
+        function searchPurchaseRecords() {
+            currentPurchaseSearchTerm = document.getElementById('purchase-search').value;
+            currentPurchasePage = 1;
+            displayPurchaseRecords();
+            updatePurchasePagination();
+        }
+
+        document.getElementById('prevPagePurchase').addEventListener('click', () => {
+            if (currentPurchasePage > 1) {
+                currentPurchasePage--;
+                displayPurchaseRecords();
+                updatePurchasePagination();
+            }
+        });
+
+        document.getElementById('nextPagePurchase').addEventListener('click', () => {
+            if (currentPurchasePage < totalPurchasePages) {
+                currentPurchasePage++;
+                displayPurchaseRecords();
+                updatePurchasePagination();
+            }
+        });
+
+        document.getElementById('pageSelectPurchase').addEventListener('change', (event) => {
+            currentPurchasePage = parseInt(event.target.value);
+            displayPurchaseRecords();
+            updatePurchasePagination();
+        });
+
+        // 确保在页面加载时获取购书记录
+        document.addEventListener('DOMContentLoaded', function() {
+            getPurchaseRecords();
+        });
+//----------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------入库记录处理--------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+        let inbookRecords = []; // 存储所有购书记录
+        let currentInbookPage = 1;
+        let totalInbookPages = 1;
+        let currentInbookSearchTerm = '';
+
+        function getInbookRecords() {
+            fetch('/demo/book/in/getInfo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    inbookRecords = data.data;
+                    displayInbookRecords();
+                    updateInbookPagination();
+                } else {
+                    console.error('获取购书记录失败:', data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function displayInbookRecords() {
+            const inbookRecordsList = document.getElementById('inbookRecordsList');
+            inbookRecordsList.innerHTML = '';
+
+            const filteredRecords = inbookRecords.filter(record => 
+                record.inId.toString().includes(currentInbookSearchTerm) ||
+                record.inBookId.toString().includes(currentInbookSearchTerm) ||
+                record.bookName.toString().includes(currentInbookSearchTerm)
+            )
+
+            const startIndex = (currentInbookPage - 1) * 10;
+            const endIndex = startIndex + 10;
+            const pageRecords = filteredRecords.slice(startIndex, endIndex);
+
+            if (pageRecords.length === 0) {
+                inbookRecordsList.innerHTML = '<tr><td colspan="6" style="text-align: center;">无该入库记录</td></tr>';
+                return;
+            }
+
+            pageRecords.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.inId}</td>
+                    <td>${record.inBookId}</td>
+                    <td>${record.bookName}</td>
+                    <td>${record.inQuantity}</td>
+                    <td>${formatDate(record.inDate)}</td>
+                    <td>
+                        <button class="button delete-inbook" data-id="${record.inId}">删除</button>
+                    </td>
+                `;
+                inbookRecordsList.appendChild(row);
+            });
+            attachInbookDeleteListeners();
+        }
+
+        function updateInbookPagination() {
+            const filteredRecords = inbookRecords.filter(record => 
+                record.inId.toString().includes(currentInbookSearchTerm) ||
+                record.inBookId.toString().includes(currentInbookSearchTerm) ||
+                record.bookName.toString().includes(currentInbookSearchTerm)
+            );
+
+            totalInbookPages = Math.ceil(filteredRecords.length / 10);
+            const pageSelect = document.getElementById('pageSelectInbook');
+            pageSelect.innerHTML = '';
+            for (let i = 1; i <= totalInbookPages; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `第 ${i} 页`;
+                if (i === currentInbookPage) {
+                    option.selected = true;
+                }
+                pageSelect.appendChild(option);
+            }
+            document.getElementById('prevPageInbook').disabled = currentInbookPage === 1;
+            document.getElementById('nextPageInbook').disabled = currentInbookPage === totalInbookPages;
+        }
+
+        function searchInbookRecords() {
+            currentInbookSearchTerm = document.getElementById('inbook-search').value;
+            currentInbookPage = 1;
+            displayInbookRecords();
+            updateInbookPagination();
+        }
+
+        document.getElementById('prevPageInbook').addEventListener('click', () => {
+            if (currentInbookPage > 1) {
+                currentInbookPage--;
+                displayInbookRecords();
+                updateInbookPagination();
+            }
+        });
+
+        document.getElementById('nextPageInbook').addEventListener('click', () => {
+            if (currentInbookPage < totalInbookPages) {
+                currentInbookPage++;
+                displayInbookRecords();
+                updateInbookPagination();
+            }
+        });
+
+        document.getElementById('pageSelectInbook').addEventListener('change', (event) => {
+            currentInbookPage = parseInt(event.target.value);
+            displayInbookRecords();
+            updateInbookPagination();
+        });
+
+        // 确保在页面加载时获取购书记录
+        document.addEventListener('DOMContentLoaded', function() {
+            getInbookRecords();
+        });
+
+//----------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------出库记录处理--------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
+        let outbookRecords = []; // 存储所有出库记录
+        let currentOutbookPage = 1;
+        let totalOutbookPages = 1;
+        let currentOutbookSearchTerm = '';
+
+        function getOutbookRecords() {
+            fetch('/demo/book/out/getInfo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    outbookRecords = data.data;
+                    displayOutbookRecords();
+                    updateOutbookPagination();
+                } else {
+                    console.error('获取出库记录失败:', data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function displayOutbookRecords() {
+            const outbookRecordsList = document.getElementById('outbookRecordsList');
+            outbookRecordsList.innerHTML = '';
+
+            const filteredRecords = outbookRecords.filter(record => {
+                const searchTerm = currentOutbookSearchTerm.toLowerCase();
+                return (
+                    (record.outId != null && record.outId.toString().includes(searchTerm)) ||
+                    (record.outBorrowerId != null && record.outBorrowerId.toString().includes(searchTerm)) ||
+                    (record.outBookid != null && record.outBookid.toString().includes(searchTerm)) ||
+                    (record.bookName != null && record.bookName.toLowerCase().includes(searchTerm)) ||
+                    (record.outToId != null && record.outToId.toString().includes(searchTerm))
+                );
+            });
+
+            const startIndex = (currentOutbookPage - 1) * 10;
+            const endIndex = startIndex + 10;
+            const pageRecords = filteredRecords.slice(startIndex, endIndex);
+
+            if (pageRecords.length === 0) {
+                outbookRecordsList.innerHTML = '<tr><td colspan="7" style="text-align: center;">无该出库记录</td></tr>';
+                return;
+            }
+
+            pageRecords.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.outId || ''}</td>
+                    <td>${record.outBorrowerId || ''}</td>
+                    <td>${record.outBookid || ''}</td>
+                    <td>${record.bookName || ''}</td>
+                    <td>${record.outQuantity || ''}</td>
+                    <td>${record.outDate ? formatDate(record.outDate) : ''}</td>
+                    <td>${record.outToId || '未指定'}</td>
+                    <td>
+                        <button class="button delete-outbook" data-id="${record.outId}">删除</button>
+                    </td>
+                `;
+                outbookRecordsList.appendChild(row);
+            });
+            attachOutbookDeleteListeners();
+        }
+
+        function updateOutbookPagination() {
+            const filteredRecords = outbookRecords.filter(record => {
+                const searchTerm = currentOutbookSearchTerm.toLowerCase();
+                return (
+                    (record.outId != null && record.outId.toString().includes(searchTerm)) ||
+                    (record.outBorrowerId != null && record.outBorrowerId.toString().includes(searchTerm)) ||
+                    (record.outBookid != null && record.outBookid.toString().includes(searchTerm)) ||
+                    (record.bookName != null && record.bookName.toLowerCase().includes(searchTerm)) ||
+                    (record.outToId != null && record.outToId.toString().includes(searchTerm))
+                );
+            });
+
+            totalOutbookPages = Math.ceil(filteredRecords.length / 10);
+            const pageSelect = document.getElementById('pageSelectOutbook');
+            pageSelect.innerHTML = '';
+            for (let i = 1; i <= totalOutbookPages; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `第 ${i} 页`;
+                if (i === currentOutbookPage) {
+                    option.selected = true;
+                }
+                pageSelect.appendChild(option);
+            }
+            document.getElementById('prevPageOutbook').disabled = currentOutbookPage === 1;
+            document.getElementById('nextPageOutbook').disabled = currentOutbookPage === totalOutbookPages;
+        }
+
+        function searchOutbookRecords() {
+            currentOutbookSearchTerm = document.getElementById('outbook-search').value;
+            currentOutbookPage = 1;
+            displayOutbookRecords();
+            updateOutbookPagination();
+        }
+
+        document.getElementById('prevPageOutbook').addEventListener('click', () => {
+            if (currentOutbookPage > 1) {
+                currentOutbookPage--;
+                displayOutbookRecords();
+                updateOutbookPagination();
+            }
+        });
+
+        document.getElementById('nextPageOutbook').addEventListener('click', () => {
+            if (currentOutbookPage < totalOutbookPages) {
+                currentOutbookPage++;
+                displayOutbookRecords();
+                updateOutbookPagination();
+            }
+        });
+
+        document.getElementById('pageSelectOutbook').addEventListener('change', (event) => {
+            currentOutbookPage = parseInt(event.target.value);
+            displayOutbookRecords();
+            updateOutbookPagination();
+        });
+
+        // 确保在页面加载时获取出库记录
+        document.addEventListener('DOMContentLoaded', function() {
+            getOutbookRecords();
+        });
+
+        // 在现有的 window.addEventListener('load', ...) 函数中添加以下行:
+        getOutbookRecords();
+
+        // 添加入库记录删除监听器
+        function attachInbookDeleteListeners() {
+            document.querySelectorAll('.delete-inbook').forEach(button => {
+                button.addEventListener('click', function() {
+                    const inId = this.getAttribute('data-id');
+                    if (confirm('确定要删除这条入库记录吗？')) {
+                        deleteInbookRecord(inId);
+                    }
+                });
+            });
+        }
+
+        // 添加出库记录删除监听器
+        function attachOutbookDeleteListeners() {
+            document.querySelectorAll('.delete-outbook').forEach(button => {
+                button.addEventListener('click', function() {
+                    const outId = this.getAttribute('data-id');
+                    if (confirm('确定要删除这条出库记录吗？')) {
+                        deleteOutbookRecord(outId);
+                    }
+                });
+            });
+        }
+
+        // 删除入库记录
+        function deleteInbookRecord(inId) {
+            fetch('/demo/book/in/delete', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'id': inId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('入库记录删除成功');
+                    getInbookRecords(); // 刷新入库记录列表
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('删除入库记录时发生错误');
+            });
+        }
+
+        // 删除出库记录
+        function deleteOutbookRecord(outId) {
+            fetch('/demo/book/out/delete', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'id': outId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('出库记录删除成功');
+                    getOutbookRecords(); // 刷新出库记录列表
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('删除出库记录时发生错误');
+            });
+        }
+
+        function openCompleteModal(reqId) {
+            const modal = document.getElementById('completeRequireModal');
+            const confirmBtn = document.getElementById('confirmComplete');
+            const cancelBtn = document.getElementById('cancelComplete');
+            const closeBtn = modal.querySelector('.close');
+
+            modal.style.display = "block";
+
+            confirmBtn.onclick = function() {
+                completeRequire(reqId);
+                modal.style.display = "none";
+            }
+
+            cancelBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            closeBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        }
+
+        function completeRequire(reqId) {
+            fetch('/demo/require/updateRequire', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqId': reqId,
+                    'reqIsfinished': 3
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const req = requireInfoList.find(r => r.reqId == reqId);
+                    if (req) {
+                        outBook(req);
+                        // 添加删除单据的操作
+                        deleteInvoices(reqId);
+                    } else {
+                        alert('需求信息不存在,无法完成出库操作');
+                    }
+                } else {
+                    alert('更新失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('更新需求状态时发生错误');
+            });
+        }
+
+        // 添加新的函数来删除单据
+        function deleteInvoices(reqId) {
+            fetch('/demo/invoices/deleteInvoicesByReqId', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqId': reqId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    console.log('单据删除成功');
+                } else {
+                    console.error('单据删除失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('删除单据时发生错误:', error);
+            });
+        }
+
+        function outBook(req) {
+            const admInfo = getAdmInfoFromCookie();
+            if (!admInfo || !admInfo.admId) {
+                alert('管理员信息不完整,请重新登录');
+                return;
+            }
+
+            fetch('/demo/book/work/outBook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'outBorrowerId': admInfo.admId,
+                    'outBookId': req.bookId,
+                    'outQuantity': req.reqQuantity,
+                    'date': new Date().toISOString().split('T')[0],
+                    'outToId': req.userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('需求已完成,出库成功');
+                    getAllRequireInfo(); // 刷新需求列表
+                    getOutbookRecords(); // 刷新出库记录
+                } else {
+                    alert('出库失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('出库过程中发生错误');
+            });
+        }
+
+        function openInvoiceModal(reqId) {
+            const modal = document.getElementById('invoiceModal');
+            const closeBtn = modal.querySelector('.close');
+            const invoiceDetails = document.getElementById('invoiceDetails');
+
+            modal.style.display = "block";
+
+            closeBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+
+            fetch('/demo/invoices/selectInvoicesByReqId', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqId': reqId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                invoiceDetails.innerHTML = ''; // 清空之前的内容
+                if (data.code === 200 && data.data && data.data.length > 0) {
+                    data.data.forEach(invoice => {
+                        const invoiceInfo = document.createElement('div');
+                        invoiceInfo.innerHTML = `
+                            <p>单据号: ${invoice.num}</p>
+                            <p>密码: ${invoice.sec}</p>
+                            <p>日期: ${formatDate(invoice.date)}</p>
+                            <hr>
+                        `;
+                        invoiceDetails.appendChild(invoiceInfo);
+                    });
+                } else {
+                    invoiceDetails.innerHTML = '<p>无对应单据信息</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                invoiceDetails.innerHTML = '<p>查询单据时发生错误</p>';
+            });
+        }
+
+        function openInbookModal(buyId, bookId, buyerId, bookName) {
+            const modal = document.getElementById('inbookModal');
+            const confirmBtn = document.getElementById('confirmInbook');
+            const cancelBtn = document.getElementById('cancelInbook');
+            const closeBtn = modal.querySelector('.close');
+
+            modal.style.display = "block";
+
+            confirmBtn.onclick = function() {
+                inBook(buyId, bookId, buyerId, bookName);
+                modal.style.display = "none";
+            }
+
+            cancelBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            closeBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        }
+
+        function inBook(buyId, bookId, buyerId, bookName) {
+            const currentDate = new Date().toISOString().split('T')[0]; // 获取当前日期,格式为 YYYY-MM-DD
+            fetch('/demo/book/work/inBook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'buyId': buyId,
+                    'buyBookId': bookId,
+                    'date': currentDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('入库成功');
+                    getPurchaseRecords(); // 刷新购书记录
+                    getInbookRecords(); // 刷新入库记录
+                } else {
+                    alert('入库失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('入库过程中发生错误');
+            });
+
+            fetch('/demo/msg/sendMsg', { // 发送入库通知
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'msgTitle': '图书入库通知',
+                    'msgContent': `尊敬的管理员,您所订购的图书《${bookName}》已入库`,
+                    'msgFromId': 1,
+                    'msgToId': buyerId,
+                    'msgDate': currentDate,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code !== 200) {
+                    alert('发送通知失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('发送通知过程中发生错误');
+            });
+        }
+
+        function refreshTextbooks() {
+            currentPage = 1;
+            fetchBooks();
+        }
+
+        function refreshPendingRequests() {
+            getAllRequireInfo();
+        }
+
+        function refreshPurchaseRecords() {
+            getPurchaseRecords();
+        }
+
+        function refreshInbookRecords() {
+            getInbookRecords();
+        }
+
+        function refreshOutbookRecords() {
+            getOutbookRecords();
+        }
+
+        // 修改消息按钮的点击事件
+        document.getElementById('openMessage').addEventListener('click', function() {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('messages').classList.add('active');
+            fetchMessages();
+        });
+
+        function fetchMessages() {
+            const admId = getAdmIdFromCookie();
+            if (!admId) {
+                showAlertModal('管理员未登录,请先登录');
+                return;
+            }
+
+            fetch('/demo/msg/getMsgR', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'id': admId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    displayMessages(data.data);
+                    // 获取消息后,将所有消息设置为已读
+                    setAllMessagesRead(admId);
+                } else {
+                    showAlertModal('获取消息失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlertModal('获取消息时发生错误: ' + error.message);
+            });
+        }
+
+        function displayMessages(messages) {
+            const messageList = document.getElementById('messageList');
+            messageList.innerHTML = '';
+
+            if (messages.length === 0) {
+                messageList.innerHTML = '<p>暂无消息</p>';
+                return;
+            }
+
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-item';
+                messageDiv.innerHTML = `
+                    <h3>${msg.msgTitle}</h3>
+                    <p>${msg.msgContent}</p>
+                    <small>发送时间: ${new Date(msg.msgDate).toLocaleString()}</small>
+                    <small>状态: ${msg.msgState === 0 ? '未读' : '已读'}</small>
+                    <button class="delete-message-button" data-msg-id="${msg.msgId}">删除</button>
+                `;
+                messageList.appendChild(messageDiv);
+            });
+
+            // 为每个删除按钮添加事件监听器
+            document.querySelectorAll('.delete-message-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const msgId = this.getAttribute('data-msg-id');
+                    deleteMessage(msgId);
+                });
+            });
+        }
+
+        function deleteMessage(msgId) {
+            if (confirm('确定要删除这条消息吗？')) {
+                fetch('/demo/msg/deleteMsg', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'id': msgId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        alert('消息删除成功');
+                        fetchMessages(); // 重新获取消息列表
+                    } else {
+                        alert('删除失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除消息时发生错误');
+                });
+            }
+        }
+
+        function setAllMessagesRead(admId) {
+            fetch('/demo/msg/seMsgToMeRead', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'id': admId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    console.log('所有消息已设置为已读');
+                    document.getElementById('unreadIndicator').style.display = 'none';
+                } else {
+                    console.error('设置消息已读失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('设置消息已读时发生错误:', error);
+            });
+        }
+
+        function getAdmIdFromCookie() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'admInfo') {
+                    const admInfo = JSON.parse(decodeURIComponent(value));
+                    return admInfo.admId;
+                }
+            }
+            return null;
+        }
+
+        // 在页面加载时检查未读消息
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUnreadMessages();
+        });
+
+        // 定期检查未读消息(例如每5分钟)
+        setInterval(checkUnreadMessages, 300000);
+
+        function checkUnreadMessages() {
+            const admId = getAdmIdFromCookie();
+            if (!admId) {
+                console.error('管理员未登录');
+                return;
+            }
+
+            fetch('/demo/msg/getMsgR', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'id': admId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const hasUnread = data.data.some(msg => msg.msgState === 0);
+                    const unreadIndicator = document.getElementById('unreadIndicator');
+                    if (unreadIndicator) {
+                        unreadIndicator.style.display = hasUnread ? 'inline' : 'none';
+                    }
+                } else {
+                    console.error('获取消息失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('获取消息时发生错误:', error);
+            });
+        }
+
+        document.getElementById('user-management-btn').addEventListener('click', function() {
+            document.getElementById('user-management').style.display = 'block';
+            document.getElementById('admin-management').style.display = 'none';
+        });
+
+        document.getElementById('admin-management-btn').addEventListener('click', function() {
+            const admInfo = getAdmInfoFromCookie();
+            if (admInfo && admInfo.admId <= 10) {
+                document.getElementById('user-management').style.display = 'none';
+                document.getElementById('admin-management').style.display = 'block';
+            } else {
+                alert('权限不足');
+                document.querySelector('a[href="#notifications"]').click();
+            }
+        });
+
+        function displayUsers(users) {
+            const tableBody = document.querySelector('#user-table tbody');
+            tableBody.innerHTML = '';
+            if (users.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4">没有找到匹配的用户</td></tr>';
+                return;
+            }
+            users.forEach(user => {
+                const row = `
+                    <tr>
+                        <td>${user.userId}</td>
+                        <td>${user.userAccount}</td>
+                        <td>${user.userName || '未设置'}</td>
+                        <td>
+                            <button class="button" onclick="resetUserPassword(${user.userId})">重置密码</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function displayAdmins(admins) {
+            const tableBody = document.querySelector('#admin-table tbody');
+            tableBody.innerHTML = '';
+            if (admins.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="3">没有找到匹配的管理员</td></tr>';
+                return;
+            }
+            admins.forEach(admin => {
+                const row = `
+                    <tr>
+                        <td>${admin.admId}</td>
+                        <td>${admin.admAccount}</td>
+                        <td>
+                            <button class="button" onclick="resetAdminPassword(${admin.admId})">重置密码</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function searchUsers() {
+            const searchTerm = document.getElementById('user-search').value;
+            fetch('/demo/user/selectByAccount', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'account': searchTerm
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    displayUsers([data.data]); // 将单个用户包装成数组
+                } else {
+                    console.error('搜索用户失败:', data.message);
+                    displayUsers([]); // 显示空结果
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayUsers([]); // 显示空结果
+            });
+        }
+
+        function resetUserPassword(userId) {
+            const newPassword = prompt("请输入新密码：");
+            if (newPassword) {
+                fetch('/user/resetPwd', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'id': userId,
+                        'password': newPassword
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        alert('密码重置成功');
+                    } else {
+                        alert('密码重置失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('重置密码时发生错误');
+                });
+            }
+        }
+
+        document.getElementById('createUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const account = document.getElementById('newUserAccount').value;
+            const password = document.getElementById('newUserPassword').value;
+            fetch('/demo/user/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'account': account,
+                    'password': password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('用户创建成功');
+                    document.getElementById('createUserModal').style.display = 'none';
+                    // 清空输入框
+                    document.getElementById('newUserAccount').value = '';
+                    document.getElementById('newUserPassword').value = '';
+                    // 刷新用户列表
+                    searchUsers();
+                } else {
+                    alert('用户创建失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('创建用户时发生错误');
+            });
+        });
+
+        function displayUsers(users) {
+            const tableBody = document.querySelector('#user-table tbody');
+            tableBody.innerHTML = '';
+            if (users.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4">没有找到匹配的用户</td></tr>';
+                return;
+            }
+            users.forEach(user => {
+                const row = `
+                    <tr>
+                        <td>${user.userId}</td>
+                        <td>${user.userAccount}</td>
+                        <td>${user.userName || '未设置'}</td>
+                        <td>
+                            <button class="button" onclick="resetUserPassword(${user.userId})">重置密码</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function searchAdmins() {
+            const searchTerm = document.getElementById('admin-search').value;
+            fetch('/demo/adm/selectAdm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'account': searchTerm
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.code === 200) {
+                    displayAdmins([data.data]); // 将单个管理员包装成数组
+                } else {
+                    console.error('搜索管理员失败:', data.message || '未知错误');
+                    displayAdmins([]); // 显示空结果
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('搜索管理员时发生错误: ' + error.message);
+                displayAdmins([]); // 显示空结果
+            });
+        }
+
+        function showCreateUserModal() {
+            document.getElementById('createUserModal').style.display = 'block';
+        }
+
+        function showCreateAdminModal() {
+            document.getElementById('createAdminModal').style.display = 'block';
+        }
+
+        document.getElementById('createAdminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const account = document.getElementById('newAdminAccount').value;
+            const password = document.getElementById('newAdminPassword').value;
+            fetch('/demo/adm/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'account': account,
+                    'password': password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('管理员创建成功');
+                    document.getElementById('createAdminModal').style.display = 'none';
+                    // 清空输入框
+                    document.getElementById('newAdminAccount').value = '';
+                    document.getElementById('newAdminPassword').value = '';
+                    // 刷新管理员列表
+                    searchAdmins();
+                } else {
+                    alert('管理员创建失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('创建管理员时发生错误');
+            });
+        });
+
+        function resetUserPassword(userId) {
+            const newPassword = prompt("请输入新密码：");
+            if (newPassword) {
+                fetch('/demo/user/resetPwd', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'id': userId,
+                        'password': newPassword
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        alert('密码重置成功');
+                    } else {
+                        alert('密码重置失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('重置密码时发生错误');
+                });
+            }
+        }
+
+        function resetAdminPassword(admId) {
+            const newPassword = prompt("请输入新密码：");
+            if (newPassword) {
+                fetch('/demo/adm/resetAdmPass', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'id': admId,
+                        'password': newPassword
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        alert('管理员密码重置成功');
+                    } else {
+                        alert('管理员密码重置失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('重置管理员密码时发生错误');
+                });
+            }
+        }
+
+        // 关闭模态框的逻辑
+        document.querySelectorAll('.close').forEach(function(closeBtn) {
+            closeBtn.onclick = function() {
+                this.closest('.modal').style.display = 'none';
+            }
+        });
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        function displayAdmins(admins) {
+            const tableBody = document.querySelector('#admin-table tbody');
+            tableBody.innerHTML = '';
+            if (admins.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="3">没有找到匹配的管理员</td></tr>';
+                return;
+            }
+            admins.forEach(admin => {
+                const row = `
+                    <tr>
+                        <td>${admin.admId}</td>
+                        <td>${admin.admAccount}</td>
+                        <td>
+                            <button class="button" onclick="resetAdminPassword(${admin.admId})">重置密码</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function showAddBookModal() {
+            document.getElementById('addBookModal').style.display = 'block';
+        }
+
+        document.getElementById('addBookForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('addBookName').value;
+            const author = document.getElementById('addBookAuthor').value;
+            const press = document.getElementById('addBookPress').value;
+            const description = document.getElementById('addBookDescription').value;
+            const quantity = document.getElementById('addBookQuantity').value;
+            const price = document.getElementById('addBookPrice').value;
+            const publishdate = document.getElementById('addBookPublishdate').value;
+            fetch('/demo/book/info/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'name': name,
+                    'author': author,
+                    'press': press,
+                    'description': description,
+                    'quantity': quantity,
+                    'price': price,
+                    'publishdate': publishdate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('添加教材成功');
+                    document.getElementById('addBookModal').style.display = 'none';
+                    // 清空输入框
+                    document.getElementById('addBookForm').reset();
+                    // 刷新教材列表
+                    fetchBooks();
+                } else {
+                    alert('添加教材失败: ' + (data.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('添加教材时发生错误');
+            });
+        });
+
+    </script>
+</body>
+</html>

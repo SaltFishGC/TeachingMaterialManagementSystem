@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎 - 南京信息工程大学教材管理系统</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #1e3c72 0%, #2a5298 100%);
+            overflow: hidden;
+        }
+        .welcome-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3rem;  // 稍微减小内边距
+            border-radius: 20px;  // 稍微增加圆角
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1.5s ease forwards;
+            width: 53.33%;  // 将宽度从 80% 减小到约 53.33%（原来的 2/3）
+            max-width: 533px;  // 将最大宽度从 800px 减小到 533px（原来的 2/3）
+        }
+        .welcome-container::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(45deg, #ff00cc, #3333ff);
+            z-index: -1;
+            filter: blur(20px);
+            opacity: 0.7;
+            border-radius: 20px;
+        }
+        .logo {
+            font-size: 5rem;  // 稍微减小字体大小
+            font-weight: bold;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #ff00cc, #00ffff, #ff00cc);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shine 5s linear infinite;
+            text-decoration: none;  // 添加这行以移除下划线
+            display: inline-block;  // 添加这行以使链接只包围文本
+            transition: text-shadow 2s ease; // 将过渡时间从 0.3s 改为 2s
+        }
+        .logo:hover {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+                         0 0 20px rgba(255, 255, 255, 0.3),
+                         0 0 30px rgba(255, 255, 255, 0.1);
+        }
+        h1 {
+            font-size: 2rem;  // 稍微减小字体大小
+            font-weight: bold;
+            margin-bottom: 2rem;
+            background: linear-gradient(to right, #ff00cc, #00ffff, #ff00cc);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shine 5s linear infinite;
+        }
+        .button {
+            display: inline-block;
+            padding: 0.7rem 1.8rem;  // 稍微减小按钮大小
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #ff00cc, #3333ff);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;  // 稍微减小字体大小
+            font-weight: bold;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+        .button.admin {
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #ff00de, 0 0 20px #ff00de, 0 0 35px #ff00de, 0 0 40px #ff00de, 0 0 50px #ff00de;
+            }
+            to {
+                text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ff00de, 0 0 40px #ff00de, 0 0 70px #ff00de, 0 0 80px #ff00de, 0 0 100px #ff00de;
+            }
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+        .floating-icon {
+            position: absolute;
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.3);
+            animation: float 6s ease-in-out infinite;
+        }
+        .icon1 { top: 10%; left: 10%; animation-delay: 0s; }
+        .icon2 { top: 20%; right: 10%; animation-delay: 1s; }
+        .icon3 { bottom: 10%; left: 15%; animation-delay: 2s; }
+        .icon4 { bottom: 20%; right: 15%; animation-delay: 3s; }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 2rem;
+        }
+        .copyright {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-icon icon1">📚</div>
+    <div class="floating-icon icon2">🎓</div>
+    <div class="floating-icon icon3">💻</div>
+    <div class="floating-icon icon4">🔬</div>
+    <main class="welcome-container">
+        <a href="https://www.nuist.edu.cn/main.htm" target="_blank" class="logo">NUIST</a> 
+        <!-- 将logo超链接到南信官网 -->
+        <h1>南京信息工程大学<br>教材管理系统</h1>
+        <div class="buttons-container">
+            <a th:href="@{/user_login}" class="button">用户登录</a>
+            <a th:href="@{/adm_login}" class="button admin">管理员登录</a>
+        </div>
+    </main>
+
+    <div class="copyright">
+        版权所有 © 4202 nuist CY 仅做交流以及课程作业使用
+    </div>
+
+    <script>
+        document.querySelectorAll('.button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.body.style.opacity = '0';
+                setTimeout(function() {
+                    window.location.href = e.target.href;
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html>

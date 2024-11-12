@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>用户页面 - 南京信息工程大学教材管理系统</title>
+        <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(45deg, #f8f0ff 0%, #e6e0ff 100%);
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar {
+            position: relative; /* 添加这一行 */
+            width: 250px;
+            background: rgba(255, 255, 255, 0.2);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            overflow-y: auto;
+            height: 100vh;
+            flex-shrink: 0;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 60px;
+        }
+        .sidebar.collapsed h1, .sidebar.collapsed nav {
+            display: none;
+        }
+        .toggle-sidebar {
+            position: absolute;
+            top: 10px;
+            right: 0px; /* 将按钮放在侧边栏内部 */
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            border-radius: 0 5px 5px 0;
+            padding: 5px 10px;
+            font-size: 16px; /* 调整箭头大小 */
+            cursor: pointer;
+            z-index: 10; /* 保持原来的z-index */
+            transition: right 0.3s ease; /* 添加过渡效果 */
+        }
+        .sidebar.collapsed .toggle-sidebar {
+            right: 0px; /* 当侧边栏收起时,保持按钮位置不变 */
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            height: 100vh;
+            transition: margin-left 0.3s ease;
+            margin-left: 30px; /* 从 300px 改为 30px */
+        }
+        .main-content.sidebar-collapsed {
+            margin-left: 60px; /* 当侧边栏收起时，主内容区域左边距为60px */
+        }
+        h1, h2 {
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .menu-item {
+            display: block;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255, 255, 255, 0.5);
+            transform: translateX(5px);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.3);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .button {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(142, 45, 226, 0.5);
+        }
+        .notification, .feedback-form {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            color: #333;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #ffffff;
+            margin: 10% auto;
+            padding: 20px;
+            border: none;
+            width: 300px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+            color: #4a00e0;
+            font-size: 1.2em;
+        }
+        .modal-content p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .modal-content label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
+        .modal-content input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .modal-content .button {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+        }
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        .modal-buttons .button {
+            width: 48%;
+        }
+        .quantity-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .quantity-container label {
+            flex: 0 0 auto;
+            margin-right: 10px;
+            margin-bottom: 0;
+        }
+        .quantity-container input[type="number"] {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .search-bar {
+            display: flex;
+            align-items: center; /* 这确保了所有子元素在交叉轴（这里是垂直方向）上居中 */
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            padding: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            /* height: 40px; 保持搜索栏的固定高度 */
+        }
+        .search-bar input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 0 0.5rem; /* 移除上下内边距，保留左右内边距 */
+            font-size: 1rem;
+            color: #333;
+            height: 24px; /* 保持输入框的高度 */
+            line-height: 24px; /* 确保文本垂直居中 */
+            margin: 0; /* 移除所有外边距 */
+        }
+        .search-bar input::placeholder {
+            color: #666;
+        }
+        .search-bar button {
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%; /* 保持按钮填满搜索栏高度 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .search-bar button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(142, 45, 226, 0.3);
+        }
+        .category-section {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .category-section button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        #selected-categories {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .selected-category {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(142, 45, 226, 0.2);
+            padding: 0 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            height: 26px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            text-align: center;
+            line-height: 26px; /* 添加这一行 */
+        }
+        #categoryModal .modal-content {
+            width: 400px;
+            padding: 30px;
+        }
+        #category-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        #category-options label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        #category-options input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        .modal-buttons .button {
+            width: auto;
+            padding: 10px 20px;
+        }
+        .popular-textbooks h3 {
+            margin-bottom: 0.5rem;
+        }
+        #all-textbooks {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        #all-textbooks th, #all-textbooks td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #all-textbooks th {
+            background-color: rgba(142, 45, 226, 0.1);
+            font-weight: bold;
+        }
+        #all-textbooks th:nth-child(1), #all-textbooks td:nth-child(1) { width: 25%; }
+        #all-textbooks th:nth-child(2), #all-textbooks td:nth-child(2) { width: 15%; }
+        #all-textbooks th:nth-child(3), #all-textbooks td:nth-child(3) { width: 20%; }
+        #all-textbooks th:nth-child(4), #all-textbooks td:nth-child(4) { width: 10%; }
+        #all-textbooks th:nth-child(5), #all-textbooks td:nth-child(5) { width: 10%; }
+        #all-textbooks th:nth-child(6), #all-textbooks td:nth-child(6) { width: 20%; text-align: center; }
+        #category-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #category-options label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .selected-category {
+            display: inline-block;
+            background-color: rgba(142, 45, 226, 0.2);
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        #selected-categories {
+            margin-bottom: 10px;
+        }
+        .search-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .search-bar input {
+            flex-grow: 1;
+            padding: 0.5rem;
+            margin-right: 10px;
+        }
+        .search-bar button {
+            width: auto;
+            padding: 0.5rem 1rem;
+        }
+        .category-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .category-section button {
+            margin-right: 1rem;
+        }
+        #selected-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .sidebar h1, .sidebar nav, .sidebar .user-info {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar.collapsed h1, .sidebar.collapsed nav, .sidebar.collapsed .user-info {
+            opacity: 0;
+            transition: opacity 0.05s ease;
+        }
+        .message-button {
+            position: absolute;
+            bottom: 84px; /* 将按钮上移动 */
+            left: 20px;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            z-index: 10; /* 确保按钮在其他元素之上 */
+        }
+        .message-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(142, 45, 226, 0.5);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: linear-gradient(45deg, rgba(142, 45, 226, 0.2), rgba(74, 0, 224, 0.2));
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #userName {
+            font-weight: bold;
+            color: #fff;
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        #logoutBtn {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            opacity: 0.8;
+        }
+        #logoutBtn:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            padding: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .pagination button,
+        .pagination select {
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .pagination button:hover,
+        .pagination select:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(142, 45, 226, 0.3);
+        }
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .pagination select {
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 2rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: calc(100% - 0.5rem) center;
+            color: black;
+        }
+        .pagination select option {
+            background-color: white;
+            color: black;
+        }
+        #pageInfo {
+            margin: 0 10px;
+            color: #4a00e0;
+            font-weight: bold;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            margin-top: 20px;
+        }
+
+        .modal-buttons .button {
+            margin: 0 10px;
+            padding: 10px 20px;
+        }
+        .refresh-button {
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+        .refresh-button:hover {
+            background: linear-gradient(45deg, #7a1cd6, #3900c2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(142, 45, 226, 0.3);
+        }
+        .confirm-modal {
+            width: 300px;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #f8f0ff, #e6e0ff);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .confirm-modal h2 {
+            color: #4a00e0;
+            margin-bottom: 15px;
+        }
+
+        .confirm-modal p {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .confirm-modal .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .confirm-modal .button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .confirm-modal .confirm-button {
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            color: white;
+        }
+
+        .confirm-modal .cancel-button {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .confirm-modal .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 添加或修改分页控件的样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .pagination button {
+            margin: 0 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(142, 45, 226, 0.3);
+        }
+
+        #pageInfoRequest {
+            margin: 0 1rem;
+            font-weight: bold;
+        }
+
+        /* 在 style 标签中添加小红点的样式 */
+        .message-button {
+            position: absolute;
+            bottom: 84px; /* 将按钮向上移动 */
+            left: 20px;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            z-index: 10; /* 确保按钮在其他元素之上 */
+        }
+        
+        .unread-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .delete-read-button {
+            background: linear-gradient(45deg, #ff4d4d, #ff1a1a);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+
+        .delete-read-button:hover {
+            background: linear-gradient(45deg, #ff1a1a, #ff0000);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 26, 26, 0.3);
+        }
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <aside class="sidebar">
+                <button class="toggle-sidebar">&#9664;</button>
+                <div class="user-info">
+                    <span id="userName"></span>
+                    <button id="logoutBtn">退出</button>
+                </div>
+                <h1>用户控制台</h1>
+                <nav>
+                    <a href="#notifications" class="menu-item active">消息通知</a>
+                    <a href="#textbooks" class="menu-item">教材订购</a>
+                    <a href="#request-history" class="menu-item">请求记录</a>
+                    <a href="#feedback" class="menu-item">问题反馈</a>
+                </nav>
+                <button class="message-button" id="openMessage">
+                    ✉
+                    <span class="unread-indicator" id="unreadIndicator"></span>
+                </button>
+            </aside>
+            <main class="main-content">
+                <section id="notifications" class="content-section active">
+                    <h2>消息通知</h2>
+                    <div class="notification">
+                        <p><strong>系统公告：</strong>新学期教材订购已开始，请及时订购所需教材。</p>
+                    </div>
+                </section>
+
+                <section id="textbooks" class="content-section">
+                    <h2>教材订购 <button class="refresh-button" onclick="refreshTextbooks()">刷新</button></h2>
+                    <div class="search-bar">
+                        <input type="text" id="textbook-search" placeholder="搜索教材...">
+                        <button onclick="searchTextbooks()">搜索</button>
+                    </div>
+                    <table id="all-textbooks">
+                        <thead>
+                            <tr>
+                                <th>教材名称</th>
+                                <th>作者</th>
+                                <th>出版社</th>
+                                <th>价格</th>
+                                <th>库存量</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 这里的内容将由 JavaScript 动态填充 -->
+                        </tbody>
+                    </table>
+                    <div class="pagination">
+                        <button id="prevPage">上一页</button>
+                        <select id="pageSelect" aria-label="选择页码"></select>
+                        <button id="nextPage">下一页</button>
+                    </div>
+                </section>
+
+                <section id="feedback" class="content-section">
+                    <h2>问题反馈</h2>
+                    <form id="feedback-form" class="feedback-form">
+                        <input type="text" id="feedback-title" placeholder="标题" required>
+                        <textarea id="feedback-content" rows="4" placeholder="请详细描述您遇到的问题" required></textarea>
+                        <button type="submit" class="button">提交反馈</button>
+                    </form>
+                </section>
+
+                <section id="request-history" class="content-section">
+                    <h2>请求记录 <button class="refresh-button" onclick="refreshRequestHistory()">刷新</button></h2>
+                    <table id="request-history-table">
+                        <thead>
+                            <tr>
+                                <th>需求单号</th>
+                                <th>时间</th>
+                                <th>教材名称</th>
+                                <th>数量</th>
+                                <th>总价</th>
+                                <th>处理状态</th>
+                                <th>操作</th> <!-- 新增操作列 -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 请求记录将在这里动态添加 -->
+                        </tbody>
+                    </table>
+                    <div class="pagination">
+                        <button id="prevPageRequest">上一页</button>
+                        <span id="pageInfoRequest"></span>
+                        <button id="nextPageRequest">下一页</button>
+                    </div>
+                </section>
+
+                <!-- 在 main-content 部分添加新的消息部分 -->
+                <section id="messages" class="content-section">
+                    <h2>消息中心 
+                        <button class="refresh-button" onclick="fetchMessages()">刷新</button>
+                        <button class="delete-read-button" onclick="deleteAllReadMessages()">删除全部已读</button>
+                    </h2>
+                    <div id="messageList">
+                        <!-- 消息将在这里动态添加 -->
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <div id="orderModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>订购书籍</h2>
+                <p id="bookTitle"></p>
+                <p>出版社：<span id="bookPublisher"></span></p> <!-- 新增出版社信息显示 -->
+                <div class="price-info">
+                    <span>单价：￥<span id="bookPrice"></span></span>
+                    <span>总价：￥<span id="totalPrice">0</span></span>
+                </div>
+                <form id="orderForm">
+                    <input type="hidden" id="bookId" name="bookId">
+                    <div class="quantity-container">
+                        <label for="quantity">订购数量：</label>
+                        <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+                    </div>
+                    <p id="stockWarning" style="color: red; display: none;">库存不足,如确定提交需要等待</p>
+                    <div class="modal-buttons">
+                        <button type="submit" class="button">确认订购</button>
+                        <button type="button" class="button" id="cancelOrder">返回</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 添加单据详情模态框 -->
+        <div id="invoiceModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>单据详情</h2>
+                <div id="invoiceDetails"></div>
+            </div>
+        </div>
+
+        <!-- 在 body 标签的末尾,其他模态框之后添加这个新的确认模态框 -->
+        <div id="confirmModal" class="modal">
+            <div class="modal-content confirm-modal">
+                <h2>确认操作</h2>
+                <p id="confirmMessage"></p>
+                <div class="modal-buttons">
+                    <button id="confirmYes" class="button confirm-button">确认</button>
+                    <button id="confirmNo" class="button cancel-button">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        // 在文件顶部声明所有全局变量
+        let allBooks = [];
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentSearchTerm = '';
+
+        // 请求记录相关的分页变量（只声明一次）
+        let currentRequestPage = 1;
+        let totalRequestPages = 1;
+        const requestsPerPage = 20;
+
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                const targetId = this.getAttribute('href').slice(1);
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(targetId).classList.add('active');
+                
+                // 如果切换到请求记录部分，刷新请求记录
+                if (targetId === 'request-history') {
+                    getUserRequests();
+                }
+            });
+        });
+
+        // 订购按钮点击事件
+        document.querySelectorAll('.order-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const bookId = this.getAttribute('data-book-id');
+                const bookTitle = this.getAttribute('data-book');
+                const bookPrice = this.getAttribute('data-price');
+                const bookStock = this.getAttribute('data-stock');
+                document.getElementById('bookTitle').textContent = bookTitle;
+                document.getElementById('bookPrice').textContent = bookPrice;
+                document.getElementById('quantity').value = 1;
+                document.getElementById('bookId').value = bookId;
+                document.getElementById('stockWarning').style.display = 'none';
+                updateTotalPrice();
+                document.getElementById('orderModal').style.display = 'block';
+            });
+        });
+
+        // 更新总价
+        function updateTotalPrice() {
+            const price = parseFloat(document.getElementById('bookPrice').textContent);
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const totalPrice = (price * quantity).toFixed(2);
+            document.getElementById('totalPrice').textContent = totalPrice;
+
+            // 检查库存并显示警告
+            const bookStock = parseInt(document.querySelector('.order-button[data-book-id="' + document.getElementById('bookId').value + '"]').getAttribute('data-stock'));
+            if (quantity > bookStock) {
+                document.getElementById('stockWarning').style.display = 'block';
+            } else {
+                document.getElementById('stockWarning').style.display = 'none';
+            }
+        }
+
+        // 量变化时更新总价
+        document.getElementById('quantity').addEventListener('input', updateTotalPrice);
+
+        // 修改提交订单的事件监听器
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const bookId = document.getElementById('bookId').value;
+            const quantity = document.getElementById('quantity').value;
+            const bookStock = parseInt(document.querySelector('.order-button[data-book-id="' + bookId + '"]').getAttribute('data-stock'));
+
+            if (quantity > bookStock) {
+                showConfirmModal('订购数量超过库存,是否确定提交?要等待库存补充。', function() {
+                    sendOrderRequest(bookId, quantity, true);
+                });
+            } else {
+                sendOrderRequest(bookId, quantity, false);
+            }
+        });
+
+        // 修改 sendOrderRequest 函数
+        function sendOrderRequest(bookId, quantity, isOverStock) {
+            const userId = getUserIdFromCookie();
+            if (!userId) {
+                showAlertModal('用户未登录，请先登录');
+                return;
+            }
+
+            const currentDate = new Date().toISOString().split('T')[0];
+
+            fetch('/demo/require/addRequire', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqDemenderId': userId,
+                    'reqBookId': bookId,
+                    'reqQuantity': quantity,
+                    'reqDate': currentDate,
+                    'reqReason': '教材订购',
+                    'reqToId': '0'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    showAlertModal(isOverStock ? '订购成功，请等待库存补充' : '订购成功');
+                    document.getElementById('orderModal').style.display = 'none';
+                } else {
+                    showAlertModal('订购失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('订购时发生错误:', error);
+                showAlertModal('订购时发生错误: ' + error.message);
+            });
+        }
+
+        // 添加一个新的警告模态框函数
+        function showAlertModal(message) {
+            showConfirmModal(message, function() {}, false);
+        }
+
+        // 修改确认模态框函数,添加一个参数来控制是否显示取消按钮
+        function showConfirmModal(message, onConfirm, showCancel = true) {
+            const modal = document.getElementById('confirmModal');
+            const messageElement = document.getElementById('confirmMessage');
+            const yesButton = document.getElementById('confirmYes');
+            const noButton = document.getElementById('confirmNo');
+
+            messageElement.textContent = message;
+            modal.style.display = 'block';
+
+            yesButton.onclick = function() {
+                modal.style.display = 'none';
+                onConfirm();
+            };
+
+            if (showCancel) {
+                noButton.style.display = 'inline-block';
+                noButton.onclick = function() {
+                    modal.style.display = 'none';
+                };
+            } else {
+                noButton.style.display = 'none';
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // 关闭弹窗（叉叉按钮）
+        document.querySelector('.close').addEventListener('click', closeModal);
+
+        // 关闭弹窗（返回按钮）
+        document.getElementById('cancelOrder').addEventListener('click', closeModal);
+
+        // 关闭弹窗函数
+        function closeModal() {
+            document.getElementById('orderModal').style.display = 'none';
+        }
+
+        function searchTextbooks() {
+            currentSearchTerm = document.getElementById('textbook-search').value;
+            currentPage = 1;
+            fetchBooks();
+        }
+
+        function fetchBooks() {
+            fetch('/demo/book/info/getByKAP', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'name': currentSearchTerm,
+                    'page': currentPage
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    displayBooks(data.data);
+                    updatePagination();
+                } else {
+                    console.error('获取图书信息失败:', data.message);
+                    alert('获取图书信息失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('获取图书信息时发生错误:', error);
+                alert('获取图书信息时发生错误: ' + error.message);
+            });
+        }
+
+        function displayBooks(books) {
+            const tableBody = document.querySelector('#all-textbooks tbody');
+            tableBody.innerHTML = '';
+
+            if (books.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="6" style="text-align: center;">无查询结果</td>';
+                tableBody.appendChild(row);
+            } else {
+                books.forEach(book => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${book.bookName}</td>
+                        <td>${book.bookAuthor}</td>
+                        <td>${book.bookPublisher}</td>
+                        <td>￥${book.bookPrice.toFixed(2)}</td>
+                        <td>${book.bookQuantity}</td>
+                        <td>
+                            <button class="button order-button" 
+                                data-book-id="${book.bookId}" 
+                                data-book="${book.bookName}" 
+                                data-price="${book.bookPrice}" 
+                                data-stock="${book.bookQuantity}"
+                                data-publisher="${book.bookPublisher}">订购</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            attachOrderButtonListeners();
+        }
+
+        function updatePagination() {
+            fetch('/demo/book/info/getBookNum', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    totalPages = Math.ceil(data.data / 10);
+                    const pageSelect = document.getElementById('pageSelect');
+                    pageSelect.innerHTML = '';
+                    for (let i = 1; i <= totalPages; i++) {
+                        const option = document.createElement('option');
+                        option.value = i;
+                        option.textContent = `第 ${i} 页`;
+                        if (i === currentPage) {
+                            option.selected = true;
+                        }
+                        pageSelect.appendChild(option);
+                    }
+                    document.getElementById('prevPage').disabled = currentPage === 1;
+                    document.getElementById('nextPage').disabled = currentPage === totalPages;
+                } else {
+                    console.error('获取图书总数失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('获取图书总数时发生错误:', error);
+            });
+        }
+
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchBooks();
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                fetchBooks();
+            }
+        });
+
+        document.getElementById('pageSelect').addEventListener('change', (event) => {
+            currentPage = parseInt(event.target.value);
+            fetchBooks();
+        });
+
+        // 页面载时获取第一页的图书
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchBooks();
+            getUserRequests();
+        });
+
+        // 添加一个新的函数来重新绑定订购按的点击事件
+        function attachOrderButtonListeners() {
+            document.querySelectorAll('.order-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const bookId = this.getAttribute('data-book-id');
+                    const bookTitle = this.getAttribute('data-book');
+                    const bookPrice = this.getAttribute('data-price');
+                    const bookStock = this.getAttribute('data-stock');
+                    const bookPublisher = this.getAttribute('data-publisher'); // 获取出版社信息
+                    document.getElementById('bookTitle').textContent = bookTitle;
+                    document.getElementById('bookPublisher').textContent = bookPublisher; // 显示出版社信息
+                    document.getElementById('bookPrice').textContent = bookPrice;
+                    document.getElementById('quantity').value = 1;
+                    document.getElementById('bookId').value = bookId;
+                    document.getElementById('stockWarning').style.display = 'none';
+                    updateTotalPrice();
+                    document.getElementById('orderModal').style.display = 'block';
+                });
+            });
+        }
+
+        // 添加从 cookie 获取 userId 函数
+        function getUserIdFromCookie() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'userInfo') {
+                    const userInfo = JSON.parse(decodeURIComponent(value));
+                    return userInfo.userId;
+                }
+            }
+            return null;
+        }
+
+        // 修改获取用户请求记录的函数
+        function getUserRequests() {
+            const userId = getUserIdFromCookie();
+            if (!userId) {
+                console.error('用户未登录');
+                return;
+            }
+
+            fetch('/demo/require/getRecordInfo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'Id': userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const allRequests = data.data;
+                    totalRequestPages = Math.ceil(allRequests.length / requestsPerPage);
+                    displayUserRequests(allRequests);
+                    updateRequestPagination();
+                } else if (data.code === 300) {
+                    console.log('无请求记录');
+                    displayUserRequests([]);
+                } else {
+                    console.error('获取请求记录败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('获取请求记录时发生错误:', error);
+            });
+        }
+
+        // 修改显示用户请求记录的函数
+        function displayUserRequests(records) {
+            const tableBody = document.querySelector('#request-history-table tbody');
+            tableBody.innerHTML = '';
+
+            if (records.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="7">暂无请求记录</td>';
+                tableBody.appendChild(row);
+                return;
+            }
+
+            const startIndex = (currentRequestPage - 1) * requestsPerPage;
+            const endIndex = startIndex + requestsPerPage;
+            const pageRecords = records.slice(startIndex, endIndex);
+
+            pageRecords.forEach(record => {
+                const row = document.createElement('tr');
+                const totalPrice = (record.bookPrice * record.reqQuantity).toFixed(2);
+                const showInvoiceButton = record.reqIsfinished === 2;
+                const showCompleteButton = record.reqIsfinished === 2; // 待取状态显示完成按钮
+                const isCompleted = record.reqIsfinished === 3;
+                const showReturnButton = !isCompleted;
+                
+                row.innerHTML = `
+                    <td>${record.reqId}</td>
+                    <td>${new Date(record.reqDate).toLocaleDateString()}</td>
+                    <td>${record.bookName}</td>
+                    <td>${record.reqQuantity}</td>
+                    <td>￥${totalPrice}</td>
+                    <td>${getStatusText(record.reqIsfinished)}</td>
+                    <td>
+                        ${showInvoiceButton ? 
+                            `<button class="button show-invoice-button" data-req-id="${record.reqId}">查询单据</button>` : ''
+                        }
+                        ${showCompleteButton ? 
+                            `<button class="button complete-button" 
+                                data-req-id="${record.reqId}"
+                                data-book-id="${record.bookId}"
+                                data-quantity="${record.reqQuantity}">完成</button>` : ''
+                        }
+                        ${showReturnButton ? 
+                            `<button class="button return-button" 
+                                data-req-id="${record.reqId}"
+                                data-book-id="${record.bookId}"
+                                data-quantity="${record.reqQuantity}"
+                                data-status="${record.reqIsfinished}">退回</button>` : ''
+                        }
+                        ${isCompleted ? 
+                            `<button class="button delete-button" data-req-id="${record.reqId}">删除</button>` : ''
+                        }
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            attachShowInvoiceListeners();
+            attachCompleteListeners(); // 添加完成按钮的监听器
+            attachReturnListeners();
+            attachDeleteListeners();
+        }
+
+        // 添加完成按钮的事件监听器
+        function attachCompleteListeners() {
+            document.querySelectorAll('.complete-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const reqId = this.getAttribute('data-req-id');
+                    const bookId = this.getAttribute('data-book-id');
+                    const quantity = this.getAttribute('data-quantity');
+                    
+                    showConfirmModal('确认已经领取到教材了吗？', () => {
+                        completeRequire(reqId, bookId, quantity);
+                    });
+                });
+            });
+        }
+
+        // 处理完成需求的函数
+        async function completeRequire(reqId, bookId, quantity) {
+            const userId = getUserIdFromCookie();
+            if (!userId) {
+                showAlertModal('用户未登录，请重新登录');
+                return;
+            }
+
+            try {
+                // 1. 添加出库记录
+                const currentDate = new Date().toISOString().split('T')[0];
+                const outBookResponse = await fetch('/demo/book/work/outBook', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'outBorrowerId': userId,
+                        'outBookId': bookId,
+                        'outQuantity': quantity,
+                        'date': currentDate,
+                        'outToId': userId
+                    })
+                });
+                const outBookData = await outBookResponse.json();
+                if (outBookData.code !== 200) {
+                    throw new Error('添加出库记录失败');
+                }
+
+                // 2. 更新需求状态为已完成
+                const updateReqResponse = await fetch('/demo/require/updateRequire', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'reqId': reqId,
+                        'reqIsfinished': 3
+                    })
+                });
+                const updateReqData = await updateReqResponse.json();
+                if (updateReqData.code !== 200) {
+                    throw new Error('更新需求状态失败');
+                }
+
+                // 3. 删除对应单据
+                const deleteInvoicesResponse = await fetch('/demo/invoices/deleteInvoicesByReqId', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'reqId': reqId
+                    })
+                });
+                const deleteInvoicesData = await deleteInvoicesResponse.json();
+                if (deleteInvoicesData.code !== 200) {
+                    console.warn('删除单据失败，但不影响主流程');
+                }
+
+                showAlertModal('需求已完成，教材领取成功！');
+                getUserRequests(); // 刷新请求记录
+            } catch (error) {
+                console.error('Error:', error);
+                showAlertModal('完成需求时发生错误: ' + error.message);
+            }
+        }
+
+        // 添加退回按钮的事件监听器
+        function attachReturnListeners() {
+            document.querySelectorAll('.return-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const reqId = this.getAttribute('data-req-id');
+                    const bookId = this.getAttribute('data-book-id');
+                    const quantity = this.getAttribute('data-quantity');
+                    const status = parseInt(this.getAttribute('data-status'));
+                    
+                    showConfirmModal('确定要退回这个需求吗？', () => {
+                        returnRequire(reqId, bookId, quantity, status);
+                    });
+                });
+            });
+        }
+
+        // 处理退回需求的函数
+        async function returnRequire(reqId, bookId, quantity, status) {
+            try {
+                // 如果是待取状态，需要先恢复书籍数量
+                if (status === 2) {
+                    const updateQuantityResponse = await fetch('/demo/book/info/updateQuantity', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            'id': bookId,
+                            'num': quantity // 加回原本减去的数量
+                        })
+                    });
+                    const updateQuantityData = await updateQuantityResponse.json();
+                    if (updateQuantityData.code !== 200) {
+                        throw new Error('恢复书籍数量失败');
+                    }
+                }
+
+                // 更新需求状态为已完成
+                const updateReqResponse = await fetch('/demo/require/updateRequire', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'reqId': reqId,
+                        'reqIsfinished': 3
+                    })
+                });
+                const updateReqData = await updateReqResponse.json();
+                if (updateReqData.code !== 200) {
+                    throw new Error('更新需求状态失败');
+                }
+
+                showAlertModal('需求已成功退回');
+                getUserRequests(); // 刷新请求记录
+            } catch (error) {
+                console.error('Error:', error);
+                showAlertModal('退回需求时发生错误: ' + error.message);
+            }
+        }
+
+        // 添加新的函数来附加查看单据按钮的监听器
+        function attachShowInvoiceListeners() {
+            document.querySelectorAll('.show-invoice-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const reqId = this.getAttribute('data-req-id');
+                    showInvoiceDetails(reqId);
+                });
+            });
+        }
+
+        // 添加新的函数来显示单据详情
+        function showInvoiceDetails(reqId) {
+            fetch(`/demo/invoices/selectInvoicesByReqId`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqId': reqId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const modal = document.getElementById('invoiceModal');
+                const invoiceDetails = document.getElementById('invoiceDetails');
+                invoiceDetails.innerHTML = '';
+
+                if (data.code === 200 && data.data && data.data.length > 0) {
+                    data.data.forEach(invoice => {
+                        invoiceDetails.innerHTML += `
+                            <p><strong>单据ID:</strong> ${invoice.id}</p>
+                            <p><strong>需求ID:</strong> ${invoice.reqId}</p>
+                            <p><strong>单据号:</strong> ${invoice.num}</p>
+                            <p><strong>密码:</strong> ${invoice.sec}</p>
+                            <p><strong>日期:</strong> ${formatDate(invoice.date)}</p>
+                            <hr>
+                        `;
+                    });
+                } else {
+                    invoiceDetails.innerHTML = '<p>无对应单据信息</p>';
+                }
+
+                modal.style.display = "block";
+
+                const closeBtn = modal.querySelector('.close');
+                closeBtn.onclick = function() {
+                    modal.style.display = "none";
+                }
+
+                window.onclick = function(event) {
+                    if (event.target == modal) {
+                        modal.style.display = "none";
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('获取单据信息时发生错误');
+            });
+        }
+
+        // 格式化日期的辅助函数
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit'
+            }).replace(/\//g, '-');
+        }
+
+        // 从 cookie 中获取用户信息并显示用户名
+        function getUserInfoFromCookie() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'userInfo') {
+                    return JSON.parse(decodeURIComponent(value));
+                }
+            }
+            return null;
+        }
+
+        const userInfo = getUserInfoFromCookie();
+        if (userInfo) {
+            const userName = userInfo.userName || '用户';
+            document.getElementById('userName').textContent = `欢迎, ${userName}`;
+        } else {
+            // 如果没有用户信息,重向到登录页
+            location.href = "/demo/login_user";
+        }
+
+        // 退出登录
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            // 清除 cookie
+            document.cookie = "userInfo=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            // 重定向到登录页面
+            location.href = "[[ @{/user_login} ]]";
+        });
+
+        // 添加 getStatusText 函数
+        function getStatusText(status) {
+            switch(status) {
+                case 0: return '未处理';
+                case 1: return '正在处理';
+                case 2: return '待取';
+                case 3: return '已完成';
+                default: return '未知状态';
+            }
+        }
+
+        // 添加新的函数来附加删除按钮的监听器
+        function attachDeleteListeners() {
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const reqId = this.getAttribute('data-req-id');
+                    showConfirmModal('您确定要删除这条需求记录吗？', function() {
+                        deleteRequire(reqId);
+                    });
+                });
+            });
+        }
+
+        // 添加新的函数来删除需求
+        function deleteRequire(reqId) {
+            fetch('/demo/require/deleteRequire', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'reqId': reqId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('需求记录已成功删除');
+                    getUserRequests(); // 刷新请求记录
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('删除需求记录时发生错误');
+            });
+        }
+
+        function refreshTextbooks() {
+            currentPage = 1;
+            fetchBooks();
+        }
+
+        function refreshRequestHistory() {
+            getUserRequests();
+        }
+
+        // 确保在页面加载时获取数据
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchBooks();
+            getUserRequests();
+        });
+
+        // 添加更新分页控件的函数
+        function updateRequestPagination() {
+            const prevButton = document.getElementById('prevPageRequest');
+            const nextButton = document.getElementById('nextPageRequest');
+            const pageInfo = document.getElementById('pageInfoRequest');
+
+            prevButton.disabled = currentRequestPage === 1;
+            nextButton.disabled = currentRequestPage === totalRequestPages;
+
+            pageInfo.textContent = `第 ${currentRequestPage} 页,共 ${totalRequestPages} 页`;
+
+            prevButton.onclick = () => {
+                if (currentRequestPage > 1) {
+                    currentRequestPage--;
+                    getUserRequests();
+                }
+            };
+
+            nextButton.onclick = () => {
+                if (currentRequestPage < totalRequestPages) {
+                    currentRequestPage++;
+                    getUserRequests();
+                }
+            };
+        }
+
+        document.getElementById('feedback-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('feedback-title').value;
+            const content = document.getElementById('feedback-content').value;
+            sendFeedback(title, content);
+        });
+
+        function sendFeedback(title, content) {
+            const userId = getUserIdFromCookie();
+            if (!userId) {
+                showAlertModal('用户未登录，请先登录');
+                return;
+            }
+
+            const currentDate = new Date().toISOString().split('T')[0];
+
+            fetch('/demo/msg/sendMsg', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'msgTitle': title,
+                    'msgContent': content,
+                    'msgFromId': userId,
+                    'msgToId': '1', // 设置接收者ID为1
+                    'msgDate': currentDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    showAlertModal('反馈已成功提交，感谢您的反馈！');
+                    document.getElementById('feedback-form').reset(); // 清空表单
+                } else {
+                    showAlertModal('反馈提交失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlertModal('提交反馈时发生错误: ' + error.message);
+            });
+        }
+
+        // 确保 showAlertModal 函数已定义，如果没有，可以添加以下代码
+        function showAlertModal(message) {
+            showConfirmModal(message, function() {}, false);
+        }
+
+        // 如果 getUserIdFromCookie 函数还没有定义，请确保添加它
+        function getUserIdFromCookie() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'userInfo') {
+                    const userInfo = JSON.parse(decodeURIComponent(value));
+                    return userInfo.userId;
+                }
+            }
+            return null;
+        }
+
+        // 修改消息按钮的点击事件
+        document.getElementById('openMessage').addEventListener('click', function() {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('messages').classList.add('active');
+            fetchMessages();
+        });
+
+        function fetchMessages() {
+            const userId = getUserIdFromCookie();
+            if (!userId) {
+                showAlertModal('用户未登录，请先登录');
+                return;
+            }
+
+            fetch('/demo/msg/getMsgR', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'id': userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    displayMessages(data.data);
+                    // 获取消息后，将所有消息设置为已读
+                    setAllMessagesRead(userId);
+                } else {
+                    showAlertModal('获取消息失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlertModal('获取消息时发生错误: ' + error.message);
+            });
+        }
+
+        function displayMessages(messages) {
+            const messageList = document.getElementById('messageList');
+            messageList.innerHTML = '';
+
+            if (messages.length === 0) {
+                messageList.innerHTML = '<p>暂无消息</p>';
+                return;
+            }
+
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-item';
+                messageDiv.innerHTML = `
+                    <h3>${msg.msgTitle}</h3>
+                    <p>${msg.msgContent}</p>
+                    <small>发送时间: ${new Date(msg.msgDate).toLocaleString()}</small>
+                    <small>状态: ${msg.msgState === 0 ? '未读' : '已读'}</small>
+                    <button class="delete-message-button" data-msg-id="${msg.msgId}">删除</button>
+                `;
+                messageList.appendChild(messageDiv);
+            });
+
+            // 为每个删除按钮添加事件监听器
+            document.querySelectorAll('.delete-message-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const msgId = this.getAttribute('data-msg-id');
+                    deleteMessage(msgId);
+                });
+            });
+        }
+
+        // 添加删除消息的函数
+        function deleteMessage(msgId) {
+            if (confirm('确定要删除这条消息吗？')) {
+                fetch('/demo/msg/deleteMsg', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'id': msgId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        alert('消息删除成功');
+                        fetchMessages(); // 重新获取消息列表
+                    } else {
+                        alert('删除失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除消息时发生错误');
+                });
+            }
+        }
+
+        // 修改样式
+        const style = document.createElement('style');
+        style.textContent = `
+            .message-item {
+                background-color: rgba(255, 255, 255, 0.8);
+                border-radius: 10px;
+                padding: 15px;
+                margin-bottom: 15px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                position: relative;
+            }
+            .message-item h3 {
+                margin-top: 0;
+                color: #4a00e0;
+            }
+            .message-item small {
+                display: block;
+                color: #666;
+                margin-top: 5px;
+            }
+            .delete-message-button {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background-color: #ff4d4d;
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+            .delete-message-button:hover {
+                background-color: #ff1a1a;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 添加设置所有消息为已读的函数
+        function setAllMessagesRead(userId) {
+            fetch('/demo/msg/seMsgToMeRead', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'id': userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    console.log('所有消息已设置为已读');
+                    document.getElementById('unreadIndicator').style.display = 'none';
+                } else {
+                    console.error('设置消息已读失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('设置消息已读时发生错误:', error);
+            });
+        }
+
+        // 在页面加载时检查未读消息
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchBooks();
+            getUserRequests();
+            checkUnreadMessages(); // 添加这一行
+        });
+
+        // 定期检查未读消息（例如每5分钟）
+        setInterval(checkUnreadMessages, 300000);
+
+        function checkUnreadMessages() {
+            const userId = getUserIdFromCookie();
+            if (!userId) {
+                console.error('用户未登录');
+                return;
+            }
+
+            fetch('/demo/msg/getMsgR', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'id': userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const hasUnread = data.data.some(msg => msg.msgState === 0);
+                    const unreadIndicator = document.getElementById('unreadIndicator');
+                    unreadIndicator.style.display = hasUnread ? 'block' : 'none';
+                } else {
+                    console.error('获取消息失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('获取消息时发生错误:', error);
+            });
+        }
+
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        const toggleButton = document.querySelector('.toggle-sidebar');
+
+        toggleButton.addEventListener('click', () => {
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                setTimeout(() => {
+                    mainContent.style.marginLeft = '30px';
+                    toggleButton.innerHTML = '&#9664;'; // 左箭头 (◀)
+                    sidebar.querySelector('h1').style.opacity = '1';
+                    sidebar.querySelector('nav').style.opacity = '1';
+                    sidebar.querySelector('.user-info').style.opacity = '1';
+                }, 50);
+            } else {
+                sidebar.querySelector('h1').style.opacity = '0';
+                sidebar.querySelector('nav').style.opacity = '0';
+                sidebar.querySelector('.user-info').style.opacity = '0';
+                setTimeout(() => {
+                    sidebar.classList.add('collapsed');
+                    mainContent.style.marginLeft = '60px';
+                    toggleButton.innerHTML = '&#9654;'; // 右箭头 (▶)
+                }, 50);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.querySelector('h1').style.opacity = '0';
+                sidebar.querySelector('nav').style.opacity = '0';
+                sidebar.querySelector('.user-info').style.opacity = '0';
+                setTimeout(() => {
+                    sidebar.classList.add('collapsed');
+                    mainContent.style.marginLeft = '60px';
+                    toggleButton.innerHTML = '&#9654;';
+                }, 50);
+            } else {
+                sidebar.classList.remove('collapsed');
+                setTimeout(() => {
+                    mainContent.style.marginLeft = '30px';
+                    toggleButton.innerHTML = '&#9664;';
+                    sidebar.querySelector('h1').style.opacity = '1';
+                    sidebar.querySelector('nav').style.opacity = '1';
+                    sidebar.querySelector('.user-info').style.opacity = '1';
+                }, 50);
+            }
+        });
+
+        // 在页面加载时触发一次 resize 事件，以设置正确的初始状态
+        window.dispatchEvent(new Event('resize'));
+
+        // 添加删除已读消息的函数
+        function deleteAllReadMessages() {
+            const userId = getUserIdFromCookie();
+            if (!userId) {
+                showAlertModal('用户未登录，请先登录');
+                return;
+            }
+
+            // 显示确认对话框
+            showConfirmModal('确定要删除所有已读消息吗？', function() {
+                fetch('/demo/msg/deleteMsgRead', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'id': userId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        showAlertModal('已读消息已全部删除');
+                        fetchMessages(); // 刷新消息列表
+                    } else if (data.code === 400) {
+                        showAlertModal('没有可删除的已读消息');
+                    } else {
+                        showAlertModal('删除失败: ' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlertModal('删除消息时发生错误: ' + error.message);
+                });
+            });
+        }
+    </script>
+    </body>
+</html>
