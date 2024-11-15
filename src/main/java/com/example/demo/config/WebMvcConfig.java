@@ -24,11 +24,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
         // 添加视频资源映射
-        registry.addResourceHandler("/videos/**")
-                .addResourceLocations("classpath:/static/videos/");
+        registry.addResourceHandler("/videos/**").addResourceLocations("classpath:/static/videos/");
         // 添加图片资源映射
-        registry.addResourceHandler("/pic/**")
-                .addResourceLocations("classpath:/static/pic/");
+        registry.addResourceHandler("/pic/**").addResourceLocations("classpath:/static/pic/");
 
     }
     /*
@@ -42,7 +40,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
      * username: root
      * password: 165831
      * thymeleaf:
-     * prefix: classpath:/templates/ ***模板路径***
+     * prefix: classpath:/templates/ ***模板路径***(不是mvc
      * suffix: .html
      * mode: HTML
      * encoding: UTF-8
