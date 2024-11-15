@@ -12,11 +12,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/welcome", "/user_login", "/adm_login", "/register").permitAll()  // 允许访问这些路径
+                        .requestMatchers("/", "/demo/welcome", "/user_login", "/adm_login", "/register").permitAll()  // 允许访问这些路径
                         .anyRequest().authenticated()  // 其他所有请求需要身份验证
                 )
                 .formLogin(form -> form
-                        .loginPage("/user_login")
+                        .loginProcessingUrl("/user_login")
                         .permitAll()
                 )
                 .logout(logout -> logout
