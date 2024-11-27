@@ -40,10 +40,11 @@ public class SwaggerConfig {
                 .info(new Info()
                         // 标题
                         .title("教材系统Swagger测试文档")
+                        .summary("Knife4j")
                         // 描述Api接口文档的基本信息
                         .description("Knife4j实现的教材管理系统后端接口服务")
                         // 版本
-                        .version("v1.0.0")
+                        .version("v1.0.5")
                         // 设置OpenAPI文档的联系信息，姓名，邮箱。
                         .contact(new Contact().name("CY429").email("SaltFish@nuist.edu.cn"))
                         // 设置OpenAPI文档的许可证信息，包括许可证名称为"Apache 2.0"，许可证URL为"http://springdoc.org"。
